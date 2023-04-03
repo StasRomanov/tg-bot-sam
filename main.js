@@ -1,5 +1,5 @@
 `use strict`;
-const TelegramBot = require('node-telegram-bot-api');
+const {Telegraf} = require('telegraf');
 const Sam = require(`./sam.js`)
 const fs = require("fs")
 const {execSync} = require("child_process");
@@ -8,19 +8,23 @@ const {execSync} = require("child_process");
 const token = fs.readFileSync('./token.txt', {encoding:'utf8', flag:'r'});
 const importantIdList = fs.readFileSync('./id.txt', {encoding:'utf8', flag:'r'}).split(`, `).map((item, index, array) => Number(item));
 process.env["NTBA_FIX_350"] = 1;
-const bot = new TelegramBot(token, {polling: true});
+process.env.BOT_TOKEN = token
+// const bot = new TelegramBot(token, {polling: true});
+const bot = new Telegraf(process.env.BOT_TOKEN);
 
-String.prototype.hashCode = function() {
+String.prototype.hashCode = () => {
   let hash = 0,
     i, chr;
   if (this.length === 0) return hash;
   for (i = 0; i < this.length; i++) {
     chr = this.charCodeAt(i);
     hash = ((hash << 5) - hash) + chr;
-    hash |= 0; // Convert to 32bit integer
+    hash |= 0;
   }
   return hash;
 }
+
+bot.start((ctx) => ctx.reply('Welcome'));
 
 const makeAudio = (text) => {
   let audioName = ``;
@@ -49,20 +53,12 @@ const makeAudio = (text) => {
   }
 }
 
-
-bot.onText(/\/voice (.+)/, (msg, match) => {
-  if (!importantIdList.includes(msg.from.id)) {
-    console.log(msg, `\n`);
-    console.log(match, `\n`);
-  }
-  bot.sendAudio(msg.chat.id, makeAudio(match[1]));
+bot.hears(/\/voice (.+)/, (ctx) => {
+  ctx.replyWithAudio({ source: makeAudio(ctx.match[1])})
 });
 
-bot.onText(/\/echo (.+)/, (msg, match) => {
-  const chatId = msg.chat.id;
-  const resp = match[1];
-  console.log(resp);
-  console.log(`send echo`);
-  bot.sendMessage(chatId, resp);
-});
 
+bot.launch();
+// Enable graceful stop
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));

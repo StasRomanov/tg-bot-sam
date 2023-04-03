@@ -9,6 +9,7 @@
     "node-telegram-bot-api": "^0.61.0",
     "pkg": "^5.5.2",
     "sam-js": "https://github.com/HexCodeFFF/sam",
+    "telegraf": "^4.12.2",
     "to-words": "^3.1.0",
     "wrapper-webpack-plugin": "^2.1.0"
   },
