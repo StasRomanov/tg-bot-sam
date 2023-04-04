@@ -1,5 +1,5 @@
 `use strict`;
-const {Telegraf} = require('telegraf');
+const {Telegraf, Input} = require('telegraf');
 const Sam = require(`./sam.js`)
 const fs = require("fs")
 const {execSync} = require("child_process");
@@ -133,6 +133,11 @@ bot.hears(/\/Show_profile_list/, (ctx) => {
   const spaceCount = 3
   defaultSettings.forEach((item, index, array) => responseBuffer+=`Profile: \*\*\*${item.name}\*\*\* | id: ${item.id}\n\`\`\`\npitch${``.padEnd(spaceCount, ` `)}speed${``.padEnd(spaceCount, ` `)}mouth${``.padEnd(spaceCount, ` `)}throat\n ${item.formattedStats.pitch}${``.padEnd(5, ` `)}${item.formattedStats.speed}${``.padEnd(5, ` `)}${item.formattedStats.mouth}${``.padEnd(6, ` `)}${item.formattedStats.throat}\n\n\`\`\``);
   ctx.replyWithMarkdown(responseBuffer);
+});
+
+bot.hears(/\/Show_profiles/, async (ctx) => {
+  saveLogs(ctx);
+  await ctx.replyWithPhoto(Input.fromLocalFile(`./settings/default/wiki-guide.jpeg`));
 });
 
 bot.hears(/\/voice (.+)/, (ctx) => {
