@@ -2,7 +2,7 @@
 ### Example user template
 audio
 token.txt
-settings
+settings/custom/*.*
 
 # IntelliJ project files
 .idea

@@ -1,0 +1,38 @@
+John Ward (default)
+64 72 128 128
+Elf
+72 64 110 160
+Little Robot
+92 60 190 190
+Stuffy Guy
+82 72 110 105
+Little Old Lady
+82 32 145 145
+Extra-Terrestrial
+100 64 150 200
+Father Garcia
+95 75 88 127
+Father Allred
+64 72 100 128
+Lisa
+37 75 30 150
+Police Officer
+85 90 125 95
+Amy (Possessed)
+155 75 155 200
+Michael (Chapter I)
+44 68 177 133
+Michael (Chapter II)
+38 70 160 220
+Thrall
+155 72 150 125
+Tiffany
+40 85 47 170
+Amy (Normal)
+35 110 40 140
+Gary
+105 100 155 105
+Miriam's (MY LITTLE ONE)
+138 105 123 190
+Miriam's (HERE I AM)
+100 70 200 200

@@ -1,19 +1,17 @@
 `use strict`;
 const {Telegraf} = require('telegraf');
-// const {message} = require('telegraf/filters');
 const Sam = require(`./sam.js`)
 const fs = require("fs")
 const {execSync} = require("child_process");
-// const util = require('util');
 
 const token = fs.readFileSync('./token.txt', {encoding:'utf8', flag:'r'});
 process.env["NTBA_FIX_350"] = 1;
 process.env.BOT_TOKEN = token
 const bot = new Telegraf(process.env.BOT_TOKEN);
+let defaultSettings = [];
 
 String.prototype.hashCode = () => {
-  let hash = 0,
-    i, chr;
+  let hash = 0, i, chr;
   if (this.length === 0) return hash;
   for (i = 0; i < this.length; i++) {
     chr = this.charCodeAt(i);
@@ -21,6 +19,50 @@ String.prototype.hashCode = () => {
     hash |= 0;
   }
   return hash;
+}
+
+const formatNumbers = (number) => {
+  number = number.toString();
+  if (number.length >= 3) {
+    return number;
+  }
+  if (number.length >= 2) {
+    return ` `+number;
+  }
+  if (number.length >= 1) {
+    return ` `+number+`  `;
+  }
+}
+
+const readDefaultSettings = () => {
+  const defaultSettingsFilename = `./settings/default/default-settings.txt`;
+  let buffer = fs.readFileSync(defaultSettingsFilename, {encoding:'utf8', flag:'r'}).split(`\n`).map((item, index, array) => {
+    if (index % 2) {
+      return item.split(` `).map((value) => Number(value));
+    } else {
+      return [index/2, item];
+    }
+  });
+  buffer.forEach((item, index, array) => {
+    if (!(index % 2)) {
+      defaultSettings.push({
+        id: item[0],
+        name: item[1],
+        stats: {
+          pitch: array[index+1][0],
+          speed: array[index+1][1],
+          mouth: array[index+1][2],
+          throat: array[index+1][3],
+        },
+        formattedStats: {
+          pitch: formatNumbers(array[index+1][0]),
+          speed: formatNumbers(array[index+1][1]),
+          mouth: formatNumbers(array[index+1][2]),
+          throat: formatNumbers(array[index+1][3]),
+        },
+      });
+    }
+  })
 }
 
 const saveLogs = (ctx) => {
@@ -61,15 +103,36 @@ const makeAudio = (text) => {
 }
 
 bot.start((ctx) => {
-  const startMsg = `Welcome!`;
   saveLogs(ctx);
+  const startMsg = `Welcome!`;
   ctx.reply(startMsg);
 });
 
 bot.help((ctx) => {
-  const helpMsg = `Use \/voice and write text to get audio.`
   saveLogs(ctx);
+  const helpMsg = `Use \/voice and write text to get audio.`
   ctx.reply(helpMsg);
+});
+
+bot.hears(/\/settings_current/, (ctx) => {
+  saveLogs(ctx);
+  const settingsFileName = `./settings/${ctx.update.message.from.id}`;
+  if (!fs.existsSync(settingsFileName)) {
+    fs.writeFileSync(settingsFileName, ``);
+  }
+  let settings = fs.readFileSync(settingsFileName, {encoding:'utf8', flag:'r'});
+  if (!settings.length) {
+    const spaceCount = 3
+    ctx.replyWithMarkdown(`Current profile: ${defaultSettings[0].name}\n\`\`\`\npitch${``.padEnd(spaceCount, ` `)}speed${``.padEnd(spaceCount, ` `)}mouth${``.padEnd(spaceCount, ` `)}throat\n ${defaultSettings[0].formattedStats.pitch}${``.padEnd(5, ` `)}${defaultSettings[0].formattedStats.speed}${``.padEnd(5, ` `)}${defaultSettings[0].formattedStats.mouth}${``.padEnd(6, ` `)}${defaultSettings[0].formattedStats.throat}\n\`\`\``);
+  }
+});
+
+bot.hears(/\/Show_profile_list/, (ctx) => {
+  saveLogs(ctx);
+  let responseBuffer = ``;
+  const spaceCount = 3
+  defaultSettings.forEach((item, index, array) => responseBuffer+=`Profile: \*\*\*${item.name}\*\*\* | id: ${item.id}\n\`\`\`\npitch${``.padEnd(spaceCount, ` `)}speed${``.padEnd(spaceCount, ` `)}mouth${``.padEnd(spaceCount, ` `)}throat\n ${item.formattedStats.pitch}${``.padEnd(5, ` `)}${item.formattedStats.speed}${``.padEnd(5, ` `)}${item.formattedStats.mouth}${``.padEnd(6, ` `)}${item.formattedStats.throat}\n\n\`\`\``);
+  ctx.replyWithMarkdown(responseBuffer);
 });
 
 bot.hears(/\/voice (.+)/, (ctx) => {
@@ -78,7 +141,9 @@ bot.hears(/\/voice (.+)/, (ctx) => {
 });
 
 bot.hears(/\/ping/, (ctx) => saveLogs(ctx));
+bot.hears(/\/echo/, (ctx) => ctx.reply(ctx.match[1]));
 
+readDefaultSettings();
 bot.launch();
 // Enable graceful stop
 process.once('SIGINT', () => bot.stop('SIGINT'));

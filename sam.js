@@ -40,13 +40,6 @@ const Sam = (message = ``, filename = `sam.wav`, modernCMU = true, singMode = fa
     console.error("speak string unspecified!");
     process.exit(1);
   }
-  if (!argv.debug) {
-    // console["log"] = () => {};
-    // console["debug"] = () => {};
-    // console["info"] = () => {};
-  } else {
-    console.log(argv);
-  }
   let sam = new SamJs();
   fs.writeFileSync(`./audio/${argv.wav}`, Buffer.from(sam.renderwav(argv.s)));
 }
