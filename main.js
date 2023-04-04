@@ -116,7 +116,7 @@ bot.help((ctx) => {
 
 bot.hears(/\/settings_current/, (ctx) => {
   saveLogs(ctx);
-  const settingsFileName = `./settings/${ctx.update.message.from.id}`;
+  const settingsFileName = `./settings/custom/${ctx.update.message.from.id}`;
   if (!fs.existsSync(settingsFileName)) {
     fs.writeFileSync(settingsFileName, ``);
   }
