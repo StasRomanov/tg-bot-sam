@@ -1,15 +1,14 @@
 `use strict`;
 const {Telegraf} = require('telegraf');
+// const {message} = require('telegraf/filters');
 const Sam = require(`./sam.js`)
 const fs = require("fs")
 const {execSync} = require("child_process");
+// const util = require('util');
 
-// replace the value below with the Telegram token you receive from @BotFather
 const token = fs.readFileSync('./token.txt', {encoding:'utf8', flag:'r'});
-const importantIdList = fs.readFileSync('./id.txt', {encoding:'utf8', flag:'r'}).split(`, `).map((item, index, array) => Number(item));
 process.env["NTBA_FIX_350"] = 1;
 process.env.BOT_TOKEN = token
-// const bot = new TelegramBot(token, {polling: true});
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 String.prototype.hashCode = () => {
@@ -24,7 +23,15 @@ String.prototype.hashCode = () => {
   return hash;
 }
 
-bot.start((ctx) => ctx.reply('Welcome'));
+const saveLogs = (ctx) => {
+  const log = {
+    match: structuredClone(ctx.match),
+    update: structuredClone(ctx.update),
+    botInfo: structuredClone(ctx.botInfo),
+  };
+  fs.writeFileSync(`./logs/${log.update.message.date}-${log.update.message.from.username}-${log.update.message.from.id}.txt`,
+    JSON.stringify(log, null, 2))
+}
 
 const makeAudio = (text) => {
   let audioName = ``;
@@ -53,10 +60,24 @@ const makeAudio = (text) => {
   }
 }
 
-bot.hears(/\/voice (.+)/, (ctx) => {
-  ctx.replyWithAudio({ source: makeAudio(ctx.match[1])})
+bot.start((ctx) => {
+  const startMsg = `Welcome!`;
+  saveLogs(ctx);
+  ctx.reply(startMsg);
 });
 
+bot.help((ctx) => {
+  const helpMsg = `Use \/voice and write text to get audio.`
+  saveLogs(ctx);
+  ctx.reply(helpMsg);
+});
+
+bot.hears(/\/voice (.+)/, (ctx) => {
+  saveLogs(ctx);
+  ctx.replyWithAudio({source: makeAudio(ctx.match[1])})
+});
+
+bot.hears(/\/ping/, (ctx) => saveLogs(ctx));
 
 bot.launch();
 // Enable graceful stop
