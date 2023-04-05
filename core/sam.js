@@ -582,8 +582,7 @@ let reciterRule = ruleString => {
 
 let rules = {};
 rules$1.split('|').map(rule => {
-  let r = reciterRule(rule),
-        c = r.c;
+  let r = reciterRule(rule), c = r.c;
   rules[c] = rules[c] || [];
   rules[c].push(r);
 });
@@ -608,11 +607,6 @@ function ttpclassic(input) {
   let c = 0;
 
   while (inputPos < text.length && c++ < 10000) {
-    {
-      let tmp = text.toLowerCase();
-      ////console.log("processing \"".concat(tmp.substr(0, inputPos), "%c").concat(tmp[inputPos].toUpperCase(), "%c").concat(tmp.substr(inputPos + 1), "\""), 'color: red;', 'color:normal;');
-    }
-
     let currentChar = text[inputPos]; // NOT '.' or '.' followed by number.
 
     if (currentChar !== '.' || flagsAt(text, inputPos + 1, FLAG_NUMERIC)) {
@@ -632,7 +626,6 @@ function ttpclassic(input) {
           return false;
         } // go to the right rules for this character.
 
-
         rules[currentChar].some(rule => {
           return rule(text, inputPos, successCallback);
         });
@@ -643,11 +636,9 @@ function ttpclassic(input) {
       inputPos++;
       continue;
     }
-
     output += '.';
     inputPos++;
   }
-
   return output;
 }
 /**
@@ -655,7 +646,6 @@ function ttpclassic(input) {
  * @param {string} key
  * @return {any} value
  */
-
 
 function getParameterCaseInsensitive(object, key) {
   return object[Object.keys(object).find(k => k.toLowerCase() === key.toLowerCase())];
@@ -669,17 +659,12 @@ function isNumeric(str) {
 }
 
 function cmudictparse(words) {
-  ////console.log("using CMUdict to translate text to phonemes."); // how to convert CMU stresses (main, secondary, none) to SAM stress http://www.retrobits.net/atari/sam.shtml#ch2.0
-
   let stresses = ["4", "", ""];
   let out = []; // split nicely
-
   let re = /([\w']+|[\d-.]+|[^\w\d\s]+)/g;
   [...words.matchAll(re)].forEach(word => {
     word = word[0].trim(); // check cmudict
-
     let proc = getParameterCaseInsensitive(cmudict["dict"], word);
-
     if (proc === undefined) {
       // if its a number
       if (isNumeric(word)) {
@@ -698,23 +683,13 @@ function cmudictparse(words) {
       .replace(/0/g, stresses[2]).replace(/1/g, stresses[0]).replace(/2/g, stresses[1]));
     }
   });
-  ////console.log(out);
   return out.join(" ");
 }
-/**
- * Convert the text to a phoneme string.
- *
- * @param {string} input The input string to convert.
- *
- * @param {boolean} moderncmu if true, use modern CMU dictionary approach
- * @return {boolean|string}
- */
-
 
 let TextToPhonemes = function (input) {
-  let moderncmu = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+  let modernCMU = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
-  if (moderncmu) {
+  if (modernCMU) {
     return cmudictparse(input);
   } else {
     return ttpclassic(input);
@@ -1227,11 +1202,6 @@ let wild_match = sign1 => {
 
 var Parser1 = ((input, addPhoneme, addStress) => {
   for (let srcPos = 0; srcPos < input.length; srcPos++) {
-    {
-      let tmp = input.toLowerCase();
-      ////console.log("processing \"".concat(tmp.substr(0, srcPos), "%c").concat(tmp.substr(srcPos, 2).toUpperCase(), "%c").concat(tmp.substr(srcPos + 2), "\""), 'color: red;', 'color:normal;');
-    }
-
     let sign1 = input[srcPos];
     let sign2 = input[srcPos + 1] || '';
     let match;
@@ -1318,49 +1288,7 @@ let FLAG_VOICED = 0x0004;
 let FLAG_STOPCONS = 0x0002;
 let FLAG_UNVOICED_STOPCONS = 0x0001;
 
-/**
- * Rewrites the phonemes using the following rules:
- *
- * <DIPHTHONG ENDING WITH WX> -> <DIPHTHONG ENDING WITH WX> WX
- * <DIPHTHONG NOT ENDING WITH WX> -> <DIPHTHONG NOT ENDING WITH WX> YX
- * UL -> AX L
- * UM -> AX M
- * UN -> AX N
- * <STRESSED VOWEL> <SILENCE> <STRESSED VOWEL> -> <STRESSED VOWEL> <SILENCE> Q <VOWEL>
- * T R -> CH R
- * D R -> J R
- * <VOWEL> R -> <VOWEL> RX
- * <VOWEL> L -> <VOWEL> LX
- * G S -> G Z
- * K <VOWEL OR DIPHTHONG NOT ENDING WITH IY> -> KX <VOWEL OR DIPHTHONG NOT ENDING WITH IY>
- * G <VOWEL OR DIPHTHONG NOT ENDING WITH IY> -> GX <VOWEL OR DIPHTHONG NOT ENDING WITH IY>
- * S P -> S B
- * S T -> S D
- * S K -> S G
- * S KX -> S GX
- * <ALVEOLAR> UW -> <ALVEOLAR> UX
- * CH -> CH CH' (CH requires two phonemes to represent it)
- * J -> J J' (J requires two phonemes to represent it)
- * <UNSTRESSED VOWEL> T <PAUSE> -> <UNSTRESSED VOWEL> DX <PAUSE>
- * <UNSTRESSED VOWEL> D <PAUSE>  -> <UNSTRESSED VOWEL> DX <PAUSE>
- *
- * @param {insertPhoneme}    insertPhoneme
- * @param {setPhoneme}       setPhoneme
- * @param {getPhoneme}       getPhoneme
- * @param {getPhonemeStress} getStress
- *
- * @return undefined
- */
-
-var Parser2 = ((insertPhoneme, setPhoneme, getPhoneme, getStress) => {
-  /**
-   * Rewrites:
-   *  'UW' => 'UX' if alveolar flag set on previous phoneme.
-   *  'CH' => 'CH' '**'(43)
-   *  'J*' => 'J*' '**'(45)
-   * @param phoneme
-   * @param pos
-   */
+const Parser2 = ((insertPhoneme, setPhoneme, getPhoneme, getStress) => {
   let handleUW_CH_J = (phoneme, pos) => {
     switch (phoneme) {
       // 'UW' Example: NEW, DEW, SUE, ZOO, THOO, TOO
@@ -1368,13 +1296,8 @@ var Parser2 = ((insertPhoneme, setPhoneme, getPhoneme, getStress) => {
         {
           // ALVEOLAR flag set?
           if (phonemeHasFlag(getPhoneme(pos - 1), FLAG_ALVEOLAR)) {
-            {
-              ////console.log("".concat(pos, " RULE: <ALVEOLAR> UW -> <ALVEOLAR> UX"));
-            }
-
             setPhoneme(pos, 16); // UX
           }
-
           break;
         }
       // 'CH' Example: CHEW
@@ -1638,28 +1561,8 @@ var Parser2 = ((insertPhoneme, setPhoneme, getPhoneme, getStress) => {
 
 });
 
-/**
- * Applies various rules that adjust the lengths of phonemes
- *
- * Lengthen <!FRICATIVE> or <VOICED> between <VOWEL> and <PUNCTUATION> by 1.5
- * <VOWEL> <RX | LX> <CONSONANT> - decrease <VOWEL> length by 1
- * <VOWEL> <UNVOICED PLOSIVE> - decrease vowel by 1/8th
- * <VOWEL> <VOICED CONSONANT> - increase vowel by 1/4 + 1
- * <NASAL> <STOP CONSONANT> - set nasal = 5, consonant = 6
- * <STOP CONSONANT> {optional silence} <STOP CONSONANT> - shorten both to 1/2 + 1
- * <STOP CONSONANT> <LIQUID> - decrease <LIQUID> by 2
- *
- * @param {getPhoneme}    getPhoneme Callback for retrieving phonemes.
- * @param {setPhonemeLength} setLength  Callback for setting phoneme length.
- * @param {getPhonemeLength} getLength  Callback for retrieving phoneme length.
- *
- * @return undefined
- */
-
-var AdjustLengths = ((getPhoneme, setLength, getLength) => {
-  {
-    ////console.log("AdjustLengths()");
-  } // LENGTHEN VOWELS PRECEDING PUNCTUATION
+const AdjustLengths = ((getPhoneme, setLength, getLength) => {
+  // LENGTHEN VOWELS PRECEDING PUNCTUATION
   //
   // Search for punctuation. If found, back up to the first vowel, then
   // process all phonemes between there and up to (but not including) the punctuation.
@@ -1686,15 +1589,10 @@ var AdjustLengths = ((getPhoneme, setLength, getLength) => {
     } // Now handle everything between position and loopIndex
 
 
-    for (let vowel = position; position < loopIndex; position++) {
+    for (; position < loopIndex; position++) {
       // test for not fricative/unvoiced or not voiced
       if (!phonemeHasFlag(getPhoneme(position), FLAG_FRICATIVE) || phonemeHasFlag(getPhoneme(position), FLAG_VOICED)) {
         let A = getLength(position); // change phoneme length to (length * 1.5) + 1
-
-        {
-          ////console.log(position + ' RULE: Lengthen <!FRICATIVE> or <VOICED> ' + PhonemeNameTable[getPhoneme(position)] + ' between VOWEL:' + PhonemeNameTable[getPhoneme(vowel)] + ' and PUNCTUATION:' + PhonemeNameTable[getPhoneme(position)] + ' by 1.5');
-        }
-
         setLength(position, (A >> 1) + A + 1);
       }
     }
@@ -1829,27 +1727,7 @@ var AdjustLengths = ((getPhoneme, setLength, getLength) => {
   }
 });
 
-/**
- * Iterates through the phoneme buffer, copying the stress value from
- * the following phoneme under the following circumstance:
- *     1. The current phoneme is voiced, excluding plosives and fricatives
- *     2. The following phoneme is voiced, excluding plosives and fricatives, and
- *     3. The following phoneme is stressed
- *
- *  In those cases, the stress value+1 from the following phoneme is copied.
- *
- * For example, the word LOITER is represented as LOY5TER, with as stress
- * of 5 on the diphthong OY. This routine will copy the stress value of 6 (5+1)
- * to the L that precedes it.
- *
- * @param {getPhoneme}       getPhoneme Callback for retrieving phonemes.
- * @param {getPhonemeStress} getStress  Callback for retrieving phoneme stress.
- * @param {setPhonemeStress} setStress  Callback for setting phoneme stress.
- *
- * @return undefined
- */
-
-var CopyStress = ((getPhoneme, getStress, setStress) => {
+const CopyStress = ((getPhoneme, getStress, setStress) => {
   // loop through all the phonemes to be output
   let position = 0;
   let phoneme;
@@ -1875,16 +1753,6 @@ var CopyStress = ((getPhoneme, getStress, setStress) => {
   }
 });
 
-/**
- * change phoneme length dependent on stress
- *
- * @param {getPhoneme}    getPhoneme Callback for retrieving phonemes.
- * @param {getPhonemeStress} getStress  Callback for retrieving phoneme length.
- * @param {setPhonemeLength} setLength  Callback for setting phoneme length.
- *
- * @return undefined
- */
-
 var SetPhonemeLength = ((getPhoneme, getStress, setLength) => {
   let position = 0;
   let phoneme;
@@ -1897,24 +1765,11 @@ var SetPhonemeLength = ((getPhoneme, getStress, setLength) => {
     } else {
       setLength(position, combinedPhonemeLengthTable[phoneme] >> 8);
     }
-
     position++;
   }
 });
 
-/**
- *
- * @param {getPhoneme}       getPhoneme    Callback for retrieving phonemes.
- * @param {setPhoneme}       setPhoneme    Callback for setting phonemes.
- * @param {insertPhoneme}    insertPhoneme Callback for inserting phonemes.
- * @param {setPhonemeStress} setStress     Callback for setting phoneme stress.
- * @param {getPhonemeLength} getLength     Callback for getting phoneme length.
- * @param {setPhonemeLength} setLength     Callback for setting phoneme length.
- *
- * @return undefined
- */
-
-var InsertBreath = ((getPhoneme, setPhoneme, insertPhoneme, setStress, getLength, setLength) => {
+const InsertBreath = ((getPhoneme, setPhoneme, insertPhoneme, setStress, getLength, setLength) => {
   let mem54 = 255;
   let len = 0; // mem55
 
@@ -1949,18 +1804,7 @@ var InsertBreath = ((getPhoneme, setPhoneme, insertPhoneme, setStress, getLength
   }
 });
 
-/**
- * Makes plosive stop consonants longer by inserting the next two following
- * phonemes from the table right behind the consonant.
- *
- * @param {getPhoneme}       getPhoneme Callback for retrieving phonemes.
- * @param {insertPhoneme}    insertPhoneme Callback for inserting phonemes.
- * @param {getPhonemeStress} getStress Callback for retrieving stress.
- *
- * @return undefined
- */
-
-var ProlongPlosiveStopConsonantsCode41240 = ((getPhoneme, insertPhoneme, getStress) => {
+const ProlongPlosiveStopConsonantsCode41240 = ((getPhoneme, insertPhoneme, getStress) => {
   let pos = -1;
   let index;
 
@@ -2098,10 +1942,6 @@ var Parser = (input => {
   });
   phonemeindex[pos] = END;
 
-  {
-    PrintPhonemes(phonemeindex, phonemeLength, stress);
-  }
-
   Parser2(insertPhoneme, setPhoneme, getPhoneme, getStress);
   CopyStress(getPhoneme, getStress, setStress);
   SetPhonemeLength(getPhoneme, getStress, setLength);
@@ -2117,11 +1957,6 @@ var Parser = (input => {
   }
 
   InsertBreath(getPhoneme, setPhoneme, insertPhoneme, getStress, getLength, setLength);
-
-  {
-    PrintPhonemes(phonemeindex, phonemeLength, stress);
-  }
-
   return phonemeindex.map((v, i) => [v, phonemeLength[i] | 0, stress[i] | 0]);
 });
 /**
@@ -2133,36 +1968,6 @@ var Parser = (input => {
  *
  * @return undefined
  */
-
-let PrintPhonemes = (phonemeindex, phonemeLength, stress) => {
-  let pad = num => {
-    let s = '000' + num;
-    return s.substr(s.length - 3);
-  };
-
-  ////console.log('==================================');
-  ////console.log('Internal Phoneme presentation:');
-  ////console.log(' pos  idx  phoneme  length  stress');
-  ////console.log('----------------------------------');
-
-  for (let i = 0; i < phonemeindex.length; i++) {
-    let name = phoneme => {
-      if (phonemeindex[i] < 81) {
-        return PhonemeNameTable[phonemeindex[i]];
-      }
-
-      if (phoneme === BREAK) {
-        return '  ';
-      }
-
-      return '??';
-    };
-
-    ////console.log(' %s  %s  %s       %s     %s', pad(i), pad(phonemeindex[i]), name(phonemeindex[i]), pad(phonemeLength[i]), pad(stress[i]));
-  }
-
-  ////console.log('==================================');
-};
 
 // Values substituted for zero bits in unvoiced consonant samples.
 // tab48426
@@ -3037,10 +2842,6 @@ var Renderer = ((phonemes, pitch, mouth, throat, speed, singmode) => {
       amplitude[2][i] = amplitudeRescale[amplitude[2][i]];
     }
 
-    {
-      PrintOutput(pitches, frequency, amplitude, sampledConsonantFlag);
-    }
-
     ProcessFrames(t, speed, frequency, pitches, amplitude, sampledConsonantFlag);
   };
 
@@ -3073,40 +2874,6 @@ var Renderer = ((phonemes, pitch, mouth, throat, speed, singmode) => {
   }
 });
 
-let PrintOutput = (pitches, frequency, amplitude, sampledConsonantFlag) => {
-  let pad = num => {
-    let s = '00000' + num;
-    return s.substr(s.length - 5);
-  };
-
-  ////console.log('===========================================');
-  ////console.log('Final data for speech output:');
-  ////console.log(' flags ampl1 freq1 ampl2 freq2 ampl3 freq3 pitch');
-  ////console.log('------------------------------------------------');
-
-  for (let i = 0; i < sampledConsonantFlag.length; i++) {
-    ////console.log(' %s %s %s %s %s %s %s %s', pad(sampledConsonantFlag[i]), pad(amplitude[0][i]), pad(frequency[0][i]), pad(amplitude[1][i]), pad(frequency[1][i]), pad(amplitude[2][i]), pad(frequency[2][i]), pad(pitches[i]));
-    i++;
-  }
-
-  ////console.log('===========================================');
-};
-
-/**
- * Process the input and return the audio buffer.
- *
- * @param {String} input
- *
- * @param {object}  [options]
- * @param {Boolean} [options.singmode] Default false.
- * @param {Number}  [options.pitch]    Default 64.
- * @param {Number}  [options.speed]    Default 72.
- * @param {Number}  [options.mouth]    Default 128.
- * @param {Number}  [options.throat]   Default 128.
- *
- * @return {Float32Array|Boolean}
- */
-
 let SamBuffer = (input, options) => {
   let buffer = SamProcess(input, options);
 
@@ -3116,20 +2883,6 @@ let SamBuffer = (input, options) => {
 
   return UInt8ArrayToFloat32Array(buffer);
 };
-/**
- * Process the input and return the audiobuffer.
- *
- * @param {String} input
- *
- * @param {object}  [options]
- * @param {Boolean} [options.singmode] Default false.
- * @param {Number}  [options.pitch]    Default 64.
- * @param {Number}  [options.speed]    Default 72.
- * @param {Number}  [options.mouth]    Default 128.
- * @param {Number}  [options.throat]   Default 128.
- *
- * @return {Uint8Array|Boolean}
- */
 
 let SamProcess = function (input) {
   let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -3150,7 +2903,7 @@ let renderwav = BufferToWav;
  * @param {object}  [options]
  * @param {Boolean} [options.phonetic]  Default false.
  * @param {Boolean} [options.singmode]  Default false.
- * @param {Boolean} [options.moderncmu] Default false.
+ * @param {Boolean} [options.modernCMU] Default false.
  * @param {Boolean} [options.debug]     Default false.
  * @param {Number}  [options.pitch]     Default 64.
  * @param {Number}  [options.speed]     Default 72.
@@ -3165,7 +2918,7 @@ function SamJs(options) {
 
   let ensurePhonetic = (text, phonetic) => {
     if (!(phonetic || opts.phonetic)) {
-      return convert(text, opts.moderncmu);
+      return convert(text, opts.modernCMU);
     }
 
     return text.toUpperCase();
@@ -3183,54 +2936,18 @@ function SamJs(options) {
   this.buf8 = (text, phonetic) => {
     return buf8(ensurePhonetic(text, phonetic), opts);
   };
-  /**
-   * Render the passed text as 32bit wave buffer array.
-   *
-   * @param {string}  text       The text to render or phoneme string.
-   * @param {boolean} [phonetic] Flag if the input text is already phonetic data.
-   *
-   * @return {Float32Array|Boolean}
-   */
-
 
   this.buf32 = (text, phonetic) => {
     return buf32(ensurePhonetic(text, phonetic), opts);
   };
-  /**
-   * Render the passed text as wave buffer and play it over the speakers.
-   *
-   * @param {string}  text       The text to render or phoneme string.
-   * @param {boolean} [phonetic] Flag if the input text is already phonetic data.
-   *
-   * @return {Promise}
-   */
-
 
   this.speak = (text, phonetic) => {
     return PlayBuffer(this.buf32(text, phonetic));
   };
-  /**
-   * Render the passed text as wave buffer and download it via URL API.
-   *
-   * @param {string}  text       The text to render or phoneme string.
-   * @param {boolean} [phonetic] Flag if the input text is already phonetic data.
-   *
-   * @return void
-   */
-
 
   this.download = (text, phonetic) => {
     RenderBuffer(this.buf8(text, phonetic));
   };
-  /**
-   * Render the passed text as 8bit wave buffer array with wav headers
-   *
-   * @param {string}  text       The text to render or phoneme string.
-   * @param {boolean} [phonetic] Flag if the input text is already phonetic data.
-   *
-   * @return {Uint8Array}
-   */
-
 
   this.renderwav = (text, phonetic) => {
     return BufferToWav(this.buf8(text, phonetic));

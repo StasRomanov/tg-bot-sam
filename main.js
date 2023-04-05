@@ -3,7 +3,6 @@ const {Telegraf, Input} = require('telegraf');
 const Sam = require(`./sam.js`)
 const fs = require("fs")
 const {execSync} = require("child_process");
-const buffer = require("buffer");
 
 const token = fs.readFileSync('./token.txt', {encoding:'utf8', flag:'r'});
 process.env["NTBA_FIX_350"] = 1;
@@ -11,7 +10,6 @@ process.env.BOT_TOKEN = token
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const defaultSettingsFilename = `./settings/default/default-settings.txt`;
 let defaultSettings = [];
-let settings = [];
 
 String.prototype.hashCode = () => {
   let hash = 0, i, chr;
@@ -122,9 +120,10 @@ const makeAudio = (text, settings) => {
 
 bot.start((ctx) => {
   saveLogs(ctx);
-  getUserSettings(ctx.update.message.from.id)
-  const startMsg = `Welcome!`;
+  getUserSettings(ctx.update.message.from.id);
+  const startMsg = `Hello, I am SAM - Software Automatic Mouth!`;
   ctx.reply(startMsg);
+  ctx.replyWithDocument(Input.fromLocalFile(`./media/Michael\ Davies\ Crawl.gif`));
 });
 
 bot.help((ctx) => {
