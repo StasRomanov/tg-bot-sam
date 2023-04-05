@@ -3,12 +3,15 @@ const {Telegraf, Input} = require('telegraf');
 const Sam = require(`./sam.js`)
 const fs = require("fs")
 const {execSync} = require("child_process");
+const buffer = require("buffer");
 
 const token = fs.readFileSync('./token.txt', {encoding:'utf8', flag:'r'});
 process.env["NTBA_FIX_350"] = 1;
 process.env.BOT_TOKEN = token
 const bot = new Telegraf(process.env.BOT_TOKEN);
+const defaultSettingsFilename = `./settings/default/default-settings.txt`;
 let defaultSettings = [];
+let settings = [];
 
 String.prototype.hashCode = () => {
   let hash = 0, i, chr;
@@ -34,18 +37,32 @@ const formatNumbers = (number) => {
   }
 }
 
-const readDefaultSettings = () => {
-  const defaultSettingsFilename = `./settings/default/default-settings.txt`;
-  let buffer = fs.readFileSync(defaultSettingsFilename, {encoding:'utf8', flag:'r'}).split(`\n`).map((item, index, array) => {
+const getUserSettings = (id) => {
+  if (!fs.existsSync(`./settings/custom/${id}/`)) {
+    fs.mkdirSync(`./settings/custom/${id}/`);
+    fs.writeFileSync(`./settings/custom/${id}/all.txt`, ``);
+    fs.writeFileSync(`./settings/custom/${id}/current.txt`, `0 1 0`); // profile id | modernCMU | singMode
+  }
+  let userSettings = fs.readFileSync(`./settings/custom/${id}/current.txt`, {encoding:'utf8', flag:'r'}).split(` `).map((item, index) => index < 1 ? Number(item):Boolean(Number(item)));
+  const userVoiceProfileId = userSettings.shift();
+  if (userVoiceProfileId < defaultSettings.length) {
+    userSettings.push(...Object.values(defaultSettings[userVoiceProfileId].stats));
+  }
+  return userSettings;
+}
+
+const readSettings = (filename) => {
+  let buffer = [];
+  let fileContent = fs.readFileSync(filename, {encoding:'utf8', flag:'r'}).split(`\n`).map((item, index, array) => {
     if (index % 2) {
       return item.split(` `).map((value) => Number(value));
     } else {
-      return [index/2, item];
+      return [[Number(item.split(` `).shift()), item.split(` `).filter((item, index) => index > 0).join(` `)]];
     }
   });
-  buffer.forEach((item, index, array) => {
+  fileContent.forEach((item, index, array) => {
     if (!(index % 2)) {
-      defaultSettings.push({
+      buffer.push({
         id: item[0],
         name: item[1],
         stats: {
@@ -63,6 +80,7 @@ const readDefaultSettings = () => {
       });
     }
   })
+  return buffer;
 }
 
 const saveLogs = (ctx) => {
@@ -75,10 +93,10 @@ const saveLogs = (ctx) => {
     JSON.stringify(log, null, 2))
 }
 
-const makeAudio = (text) => {
+const makeAudio = (text, settings) => {
   let audioName = ``;
   const start = Date.now();
-  Sam(text);
+  Sam(text, `sam.wav`, ...settings);
   const end = Date.now();
   console.log(`Sam-time: ${end - start} ms`);
   console.log(new Date(new Date().getTime()).toString(), text);
@@ -104,6 +122,7 @@ const makeAudio = (text) => {
 
 bot.start((ctx) => {
   saveLogs(ctx);
+  getUserSettings(ctx.update.message.from.id)
   const startMsg = `Welcome!`;
   ctx.reply(startMsg);
 });
@@ -114,20 +133,13 @@ bot.help((ctx) => {
   ctx.reply(helpMsg);
 });
 
-bot.hears(/\/settings_current/, (ctx) => {
+bot.hears(/\/Show_current_profile/, (ctx) => {
   saveLogs(ctx);
-  const settingsFileName = `./settings/custom/${ctx.update.message.from.id}`;
-  if (!fs.existsSync(settingsFileName)) {
-    fs.writeFileSync(settingsFileName, ``);
-  }
-  let settings = fs.readFileSync(settingsFileName, {encoding:'utf8', flag:'r'});
-  if (!settings.length) {
-    const spaceCount = 3
-    ctx.replyWithMarkdown(`Current profile: ${defaultSettings[0].name}\n\`\`\`\npitch${``.padEnd(spaceCount, ` `)}speed${``.padEnd(spaceCount, ` `)}mouth${``.padEnd(spaceCount, ` `)}throat\n ${defaultSettings[0].formattedStats.pitch}${``.padEnd(5, ` `)}${defaultSettings[0].formattedStats.speed}${``.padEnd(5, ` `)}${defaultSettings[0].formattedStats.mouth}${``.padEnd(6, ` `)}${defaultSettings[0].formattedStats.throat}\n\`\`\``);
-  }
+  const spaceCount = 3
+  ctx.replyWithMarkdown(`Current profile: ${defaultSettings[0].name}\n\`\`\`\npitch${``.padEnd(spaceCount, ` `)}speed${``.padEnd(spaceCount, ` `)}mouth${``.padEnd(spaceCount, ` `)}throat\n ${defaultSettings[0].formattedStats.pitch}${``.padEnd(5, ` `)}${defaultSettings[0].formattedStats.speed}${``.padEnd(5, ` `)}${defaultSettings[0].formattedStats.mouth}${``.padEnd(6, ` `)}${defaultSettings[0].formattedStats.throat}\n\`\`\``);
 });
 
-bot.hears(/\/Show_profile_list/, (ctx) => {
+bot.hears(/\/Show_all_profiles/, (ctx) => {
   saveLogs(ctx);
   let responseBuffer = ``;
   const spaceCount = 3
@@ -135,20 +147,33 @@ bot.hears(/\/Show_profile_list/, (ctx) => {
   ctx.replyWithMarkdown(responseBuffer);
 });
 
-bot.hears(/\/Show_profiles/, async (ctx) => {
+bot.hears(/\/Show_faith_profiles/, async (ctx) => {
   saveLogs(ctx);
   await ctx.replyWithPhoto(Input.fromLocalFile(`./settings/default/wiki-guide.jpeg`));
 });
 
-bot.hears(/\/voice (.+)/, (ctx) => {
+bot.hears(/\/Set_profile_by_id (.+)/, (ctx) => {
   saveLogs(ctx);
-  ctx.replyWithAudio({source: makeAudio(ctx.match[1])})
+  const id = ctx.match[1];
+  const settingsFileName = `./settings/custom/${ctx.update.message.from.id}/current.txt`;
+  if (id < defaultSettings.length) {
+    const buffer = fs.readFileSync(`./settings/custom/${ctx.update.message.from.id}/current.txt`, {encoding:'utf8', flag:'r'}).split(` `); // profile id | modernCMU | singMode
+    buffer[0] = id;
+    fs.writeFileSync(settingsFileName, buffer.join(` `));
+  } else {
+    ctx.reply(`:^(`);
+  }
 });
 
-bot.hears(/\/ping/, (ctx) => saveLogs(ctx));
+bot.hears(/\/voice (.+)/, (ctx) => {
+  saveLogs(ctx);
+  ctx.replyWithAudio({source: makeAudio(ctx.match[1], getUserSettings(ctx.update.message.from.id))})
+});
+
+bot.hears(/\/ping/, (ctx) => getUserSettings(ctx.update.message.from.id));
 bot.hears(/\/echo/, (ctx) => ctx.reply(ctx.match[1]));
 
-readDefaultSettings();
+defaultSettings = readSettings(defaultSettingsFilename); //generate default settings
 bot.launch();
 // Enable graceful stop
 process.once('SIGINT', () => bot.stop('SIGINT'));
