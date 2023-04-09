@@ -60,8 +60,8 @@ const readSettings = (filename) => {
   fileContent.forEach((item, index, array) => {
     if (!(index % 2)) {
       buffer.push({
-        id: item[0],
-        name: item[1],
+        id: item[0][0],
+        name: item[0][1],
         stats: {
           pitch: array[index+1][0],
           speed: array[index+1][1],
@@ -159,7 +159,7 @@ bot.hears(/\/Set_profile_by_id (.+)/, (ctx) => {
     buffer[0] = id;
     fs.writeFileSync(settingsFileName, buffer.join(` `));
   } else {
-    ctx.reply(`:^(`);
+    ctx.reply(`Wrong ID\nMin ID: 0 | Max ID: ${defaultSettings.length-1}\nYou try to set ID: ${id}`);
   }
 });
 
@@ -168,7 +168,7 @@ bot.hears(/\/voice (.+)/, (ctx) => {
   ctx.replyWithAudio({source: makeAudio(ctx.match[1], getUserSettings(ctx.update.message.from.id))})
 });
 
-// bot.hears(/\/ping/, (ctx) => getUserSettings(ctx.update.message.from.id));
+bot.hears(/\/ping/, (ctx) => ctx.reply(`SAM alive !`));
 bot.hears(/\/echo/, (ctx) => ctx.reply(ctx.match[1]));
 
 defaultSettings = readSettings(defaultSettingsFilename); //generate default settings
