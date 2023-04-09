@@ -17,6 +17,10 @@
  * @param {Number} mask The mask to test.
  * @return {boolean}
  */
+
+const {ToWords} = require('to-words');
+const cmudict = require('@stdlib/datasets-cmudict')();
+
 let matchesBitmask = (bits, mask) => {
   return (bits & mask) !== 0;
 };
@@ -237,11 +241,6 @@ let FLAG_CONSONANT$1 = 0x20; // FIXME: is this correct?
 let FLAG_VOWEL_OR_Y = 0x40;
 let FLAG_ALPHA_OR_QUOT = 0x80;
 
-const {
-  ToWords
-} = require('to-words');
-
-let cmudict = require('cmudict')();
 /**
  * Test if the char matches against the flags in the reciter table.
  * @param {string} c

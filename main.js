@@ -5,7 +5,6 @@ const fs = require("fs")
 const {execSync} = require("child_process");
 
 const token = fs.readFileSync('./token.txt', {encoding:'utf8', flag:'r'});
-process.env["NTBA_FIX_350"] = 1;
 process.env.BOT_TOKEN = token
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const defaultSettingsFilename = `./settings/default/default-settings.txt`;
@@ -51,7 +50,7 @@ const getUserSettings = (id) => {
 
 const readSettings = (filename) => {
   let buffer = [];
-  let fileContent = fs.readFileSync(filename, {encoding:'utf8', flag:'r'}).split(`\n`).map((item, index, array) => {
+  let fileContent = fs.readFileSync(filename, {encoding:'utf8', flag:'r'}).split(`\n`).map((item, index) => {
     if (index % 2) {
       return item.split(` `).map((value) => Number(value));
     } else {
@@ -142,7 +141,7 @@ bot.hears(/\/Show_all_profiles/, (ctx) => {
   saveLogs(ctx);
   let responseBuffer = ``;
   const spaceCount = 3
-  defaultSettings.forEach((item, index, array) => responseBuffer+=`Profile: \*\*\*${item.name}\*\*\* | id: ${item.id}\n\`\`\`\npitch${``.padEnd(spaceCount, ` `)}speed${``.padEnd(spaceCount, ` `)}mouth${``.padEnd(spaceCount, ` `)}throat\n ${item.formattedStats.pitch}${``.padEnd(5, ` `)}${item.formattedStats.speed}${``.padEnd(5, ` `)}${item.formattedStats.mouth}${``.padEnd(6, ` `)}${item.formattedStats.throat}\n\n\`\`\``);
+  defaultSettings.forEach((item) => responseBuffer+=`Profile: \*\*\*${item.name}\*\*\* | id: ${item.id}\n\`\`\`\npitch${``.padEnd(spaceCount, ` `)}speed${``.padEnd(spaceCount, ` `)}mouth${``.padEnd(spaceCount, ` `)}throat\n ${item.formattedStats.pitch}${``.padEnd(5, ` `)}${item.formattedStats.speed}${``.padEnd(5, ` `)}${item.formattedStats.mouth}${``.padEnd(6, ` `)}${item.formattedStats.throat}\n\n\`\`\``);
   ctx.replyWithMarkdown(responseBuffer);
 });
 
@@ -169,7 +168,7 @@ bot.hears(/\/voice (.+)/, (ctx) => {
   ctx.replyWithAudio({source: makeAudio(ctx.match[1], getUserSettings(ctx.update.message.from.id))})
 });
 
-bot.hears(/\/ping/, (ctx) => getUserSettings(ctx.update.message.from.id));
+// bot.hears(/\/ping/, (ctx) => getUserSettings(ctx.update.message.from.id));
 bot.hears(/\/echo/, (ctx) => ctx.reply(ctx.match[1]));
 
 defaultSettings = readSettings(defaultSettingsFilename); //generate default settings
