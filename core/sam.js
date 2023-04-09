@@ -1,3 +1,5 @@
+// noinspection SpellCheckingInspection
+
 /**
  * This is SamJs.js v0.1.4
  *
@@ -48,28 +50,6 @@ let Uint16ToUint8Array = uint16 => {
  * @return {Promise}
  */
 
-let Play = (context, audiobuffer) => {
-  return new Promise(resolve => {
-    let source = context.createBufferSource();
-    let soundBuffer = context.createBuffer(1, audiobuffer.length, 22050);
-    let buffer = soundBuffer.getChannelData(0);
-
-    for (let i = 0; i < audiobuffer.length; i++) {
-      buffer[i] = audiobuffer[i];
-    }
-
-    source.buffer = soundBuffer;
-    source.connect(context.destination);
-
-    source.onended = () => {
-      resolve(true);
-    };
-
-    source.start(0);
-  });
-};
-
-let context = null;
 /**
  * Play an audio buffer.
  *
@@ -78,19 +58,6 @@ let context = null;
  * @return {Promise}
  */
 
-let PlayBuffer = audiobuffer => {
-  if (null === context) {
-    context = new AudioContext();
-  }
-
-  if (!context) {
-    {
-      throw new Error('No player available!');
-    }
-  }
-
-  return Play(context, audiobuffer);
-};
 /**
  * Convert a Uint8Array wave buffer to a Float32Array WaveBuffer
  *
@@ -174,24 +141,6 @@ let BufferToWav = audiobuffer => {
  *
  * @return void
  */
-
-let RenderBuffer = audiobuffer => {
-  let filename = 'sam.wav';
-  let realbuffer = BufferToWav(audiobuffer);
-  let blob = new Blob([realbuffer], {
-    type: 'audio/vnd.wave'
-  });
-  let url = window.URL || window.webkitURL;
-  let fileURL = url.createObjectURL(blob);
-  let a = document.createElement('a');
-  a.href = fileURL;
-  a.target = '_blank';
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  url.revokeObjectURL(fileURL);
-};
 
 /**
  * Char flags.
@@ -455,7 +404,7 @@ let reciterRule = ruleString => {
             if (!isOneOf(inputChar, TCS)) return false; // FIXME: This is illogical and can never be reached. Bug in orig. code? reciter.c:489 (pos37367)
 
             {
-              throw new Error('This should not be possible ', inputChar);
+              throw new Error('This should not be possible ' + inputChar);
             }
           },
           // '^' - next char must be a consonant.
@@ -1200,7 +1149,7 @@ let wild_match = sign1 => {
  */
 
 
-var Parser1 = ((input, addPhoneme, addStress) => {
+const Parser1 = ((input, addPhoneme, addStress) => {
   for (let srcPos = 0; srcPos < input.length; srcPos++) {
     let sign1 = input[srcPos];
     let sign2 = input[srcPos + 1] || '';
@@ -1753,7 +1702,7 @@ const CopyStress = ((getPhoneme, getStress, setStress) => {
   }
 });
 
-var SetPhonemeLength = ((getPhoneme, getStress, setLength) => {
+const SetPhonemeLength = ((getPhoneme, getStress, setLength) => {
   let position = 0;
   let phoneme;
 
@@ -1845,7 +1794,7 @@ const ProlongPlosiveStopConsonantsCode41240 = ((getPhoneme, insertPhoneme, getSt
  * @return {Array|Boolean} The parsed data.
  */
 
-var Parser = (input => {
+const Parser = (input => {
   if (!input) {
     return false;
   }
@@ -2233,7 +2182,7 @@ let sampleTable = [//00  T', S, Z  (coronal)
  * @return {Array}
  */
 
-var SetMouthThroat = ((mouth, throat) => {
+const SetMouthThroat = ((mouth, throat) => {
   let trans = (factor, initialFrequency) => {
     return (factor * initialFrequency >> 8 & 0xFF) << 1;
   };
@@ -2306,7 +2255,7 @@ var SetMouthThroat = ((mouth, throat) => {
  * @return {Number}
  */
 
-var CreateTransitions = ((pitches, frequency, amplitude, tuples) => {
+const CreateTransitions = ((pitches, frequency, amplitude, tuples) => {
   // 0=pitches
   // 1=frequency1
   // 2=frequency2
@@ -2449,7 +2398,7 @@ let FALLING_INFLECTION = 1;
  * @return Array
  */
 
-var CreateFrames = ((pitch, tuples, frequencyData) => {
+const CreateFrames = ((pitch, tuples, frequencyData) => {
   /**
    * Create a rising or falling inflection 30 frames prior to index X.
    * A rising inflection is used for questions, and a falling inflection is used for statements.
@@ -2527,9 +2476,9 @@ var CreateFrames = ((pitch, tuples, frequencyData) => {
   return [pitches, frequency, amplitude, sampledConsonantFlag];
 });
 
-var CreateOutputBuffer = (buffersize => {
-  let buffer = new Uint8Array(buffersize);
-  let bufferpos = 0;
+const CreateOutputBuffer = (bufferSize => {
+  let buffer = new Uint8Array(bufferSize);
+  let bufferPosition = 0;
   let oldTimeTableIndex = 0; // Scale by 16 and write five times.
 
   let writer = (index, A) => {
@@ -2540,30 +2489,30 @@ var CreateOutputBuffer = (buffersize => {
 
   writer.ary = (index, array) => {
     // timetable for more accurate c64 simulation
-    let timetable = [[162, 167, 167, 127, 128], // formants synth
+    let timetable = [[162, 167, 167, 127, 128], // formats synth
     [226, 60, 60, 0, 0], // unvoiced sample 0
     [225, 60, 59, 0, 0], // unvoiced sample 1
     [200, 0, 0, 54, 55], // voiced sample 0
     [199, 0, 0, 54, 54] // voiced sample 1
     ];
-    bufferpos += timetable[oldTimeTableIndex][index];
+    bufferPosition += timetable[oldTimeTableIndex][index];
 
-    if ((bufferpos / 50 | 0) > buffer.length) {
+    if ((bufferPosition / 50 | 0) > buffer.length) {
       {
-        throw new Error("Buffer overflow, want ".concat(bufferpos / 50 | 0, " but buffersize is only ").concat(buffer.length, "!"));
+        throw new Error("Buffer overflow, want ".concat(String(bufferPosition / 50 | 0), " but buffer size is only ").concat(String(buffer.length), "!"));
       }
     }
 
     oldTimeTableIndex = index; // write a little bit in advance
 
     for (let k = 0; k < 5; k++) {
-      buffer[(bufferpos / 50 | 0) + k] = array[k];
+      buffer[(bufferPosition / 50 | 0) + k] = array[k];
     }
   };
 
   writer.get = () => {
 
-    return buffer.slice(0, bufferpos / 50 | 0);
+    return buffer.slice(0, bufferPosition / 50 | 0);
   };
 
   return writer;
@@ -2580,7 +2529,7 @@ var CreateOutputBuffer = (buffersize => {
  * @return Uint8Array
  */
 
-var Renderer = ((phonemes, pitch, mouth, throat, speed, singmode) => {
+const Renderer = ((phonemes, pitch, mouth, throat, speed, singmode) => {
   pitch = pitch === undefined ? 64 : pitch & 0xFF;
   mouth = mouth === undefined ? 128 : mouth & 0xFF;
   throat = throat === undefined ? 128 : throat & 0xFF;
@@ -2594,9 +2543,9 @@ var Renderer = ((phonemes, pitch, mouth, throat, speed, singmode) => {
    * PROCESS THE FRAMES
    *
    * In traditional vocal synthesis, the glottal pulse drives filters, which
-   * are attenuated to the frequencies of the formants.
+   * are attenuated to the frequencies of the formats.
    *
-   * SAM generates these formants directly with sine and rectangular waves.
+   * SAM generates these formats directly with sine and rectangular waves.
    * To simulate them being driven by the glottal pulse, the waveforms are
    * reset at the beginning of each glottal pulse.
    */
@@ -2898,7 +2847,7 @@ let SamProcess = function (input) {
 let convert = TextToPhonemes;
 let buf8 = SamProcess;
 let buf32 = SamBuffer;
-let renderwav = BufferToWav;
+let renderWav = BufferToWav;
 /**
  * @param {object}  [options]
  * @param {Boolean} [options.phonetic]  Default false.
@@ -2937,19 +2886,7 @@ function SamJs(options) {
     return buf8(ensurePhonetic(text, phonetic), opts);
   };
 
-  this.buf32 = (text, phonetic) => {
-    return buf32(ensurePhonetic(text, phonetic), opts);
-  };
-
-  this.speak = (text, phonetic) => {
-    return PlayBuffer(this.buf32(text, phonetic));
-  };
-
-  this.download = (text, phonetic) => {
-    RenderBuffer(this.buf8(text, phonetic));
-  };
-
-  this.renderwav = (text, phonetic) => {
+  this.renderWav = (text, phonetic) => {
     return BufferToWav(this.buf8(text, phonetic));
   };
 }
@@ -2957,6 +2894,6 @@ function SamJs(options) {
 SamJs.buf8 = buf8;
 SamJs.buf32 = buf32;
 SamJs.convert = convert;
-SamJs.renderwav = renderwav;
+SamJs.renderWav = renderWav;
 
 exports.default = SamJs

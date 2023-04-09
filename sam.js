@@ -17,7 +17,7 @@ const Sam = (message = ``, filename = `sam.wav`, modernCMU = true, singMode = fa
   [pronunciationSettings.modernCMU, pronunciationSettings.singmode, pronunciationSettings.pitch,
     pronunciationSettings.speed, pronunciationSettings.mouth, pronunciationSettings.throat] = [modernCMU, singSettings, ...singSettings];
   let sam = new SamJs(pronunciationSettings);
-  fs.writeFileSync(`./audio/${filename}`, Buffer.from(sam.renderwav(message)));
+  fs.writeFileSync(`./audio/${filename}`, Buffer.from(sam.renderWav(message)));
 }
 
 module.exports = Sam;
