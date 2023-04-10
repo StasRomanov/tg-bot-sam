@@ -5,21 +5,25 @@ const fs = require("fs")
 const {execSync} = require("child_process");
 
 const token = fs.readFileSync('./token.txt', {encoding:'utf8', flag:'r'});
-process.env.BOT_TOKEN = token
+process.env.BOT_TOKEN = token;
+const debugMode = false;
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const defaultSettingsFilename = `./settings/default/default-settings.txt`;
 let defaultSettings = [];
 
-String.prototype.hashCode = () => {
-  let hash = 0, i, chr;
-  if (this.length === 0) return hash;
-  for (i = 0; i < this.length; i++) {
-    chr = this.charCodeAt(i);
-    hash = ((hash << 5) - hash) + chr;
-    hash |= 0;
-  }
-  return hash;
-}
+const getHash53 = (str, seed = 0) => {
+    let h1 = 0xdeadbeef^seed, h2 = 0x41c6ce57^seed;
+    for (let i = 0, ch; i < str.length; i++) {
+        ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1  = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+    h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2  = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+    h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+};
 
 const formatNumbers = (number) => {
   number = number.toString();
@@ -41,11 +45,25 @@ const getUserSettings = (id) => {
     fs.writeFileSync(`./settings/custom/${id}/current.txt`, `0 1 0`); // profile id | modernCMU | singMode
   }
   let userSettings = fs.readFileSync(`./settings/custom/${id}/current.txt`, {encoding:'utf8', flag:'r'}).split(` `).map((item, index) => index < 1 ? Number(item):Boolean(Number(item)));
-  const userVoiceProfileId = userSettings.shift();
-  if (userVoiceProfileId < defaultSettings.length) {
-    userSettings.push(...Object.values(defaultSettings[userVoiceProfileId].stats));
+  if (userSettings[0] < defaultSettings.length) {
+    userSettings.push(...Object.values(defaultSettings[userSettings[0]].stats));
+  }
+  let i = 0;
+  userSettings = {
+    id: userSettings[i++],
+    modernCMU: userSettings[i++],
+    singMode: userSettings[i++],
+    pitch: userSettings[i++],
+    speed: userSettings[i++],
+    mouth: userSettings[i++],
+    throat: userSettings[i++],
   }
   return userSettings;
+}
+
+const setUserSettings = (id, settings) => {
+  const settingsFileName = `./settings/custom/${id}/current.txt`;
+  fs.writeFileSync(settingsFileName, Object.values(settings).slice(0, 3).map((item) => Number(item)).join(` `));
 }
 
 const readSettings = (filename) => {
@@ -86,35 +104,27 @@ const saveLogs = (ctx) => {
     update: structuredClone(ctx.update),
     botInfo: structuredClone(ctx.botInfo),
   };
-  fs.writeFileSync(`./logs/${log.update.message.date}-${log.update.message.from.username}-${log.update.message.from.id}.txt`,
+  fs.writeFileSync(`./logs/${log.update.message.date}-${log.update.message.from.username}-${log.update.message.from.id}.log`,
     JSON.stringify(log, null, 2))
 }
 
 const makeAudio = (text, settings) => {
+  const wavName = `sam.wav`;
   let audioName = ``;
   const start = Date.now();
-  Sam(text, `sam.wav`, ...settings);
+  Sam(text.trim(), wavName, settings);
   const end = Date.now();
-  console.log(`Sam-time: ${end - start} ms`);
-  console.log(new Date(new Date().getTime()).toString(), text);
-  text = text.replaceAll(` `, `_`);
-  if (text.length <= 30) {
-    audioName = text;
-  } else {
-    audioName = audioName.hashCode();
+  if (debugMode) {
+    console.log(`Sam-time: ${end - start} ms`);
+    console.log(new Date(new Date().getTime()).toString(), text);
   }
+  text = text.trim().replace(/[^\w\s]/gi, ``).replace(/\s+/g, `_`);
+  audioName = text.length <= 100 ? text : `voice-${getHash53(audioName, Date.now())}`;
   const wavFileName = `./audio/sam.wav`;
   const mp3FileName = `./audio/${audioName}.mp3`;
   const ffmpegFlags = `-y -loglevel warning`;
   execSync(`ffmpeg -i ${wavFileName} ${mp3FileName} ${ffmpegFlags}`);
-  try {
-    if (fs.existsSync(mp3FileName)) {
-      return mp3FileName;
-    }
-  } catch(err) {
-    console.error(err)
-    process.exit(3);
-  }
+  return mp3FileName;
 }
 
 bot.start((ctx) => {
@@ -147,20 +157,27 @@ bot.hears(/\/Show_all_profiles/, (ctx) => {
 
 bot.hears(/\/Show_faith_profiles/, async (ctx) => {
   saveLogs(ctx);
-  await ctx.replyWithPhoto(Input.fromLocalFile(`./settings/default/wiki-guide.jpeg`));
+  await ctx.replyWithPhoto(Input.fromLocalFile(`./media/wiki-guide.jpeg`));
 });
 
 bot.hears(/\/Set_profile_by_id (.+)/, (ctx) => {
   saveLogs(ctx);
   const id = ctx.match[1];
-  const settingsFileName = `./settings/custom/${ctx.update.message.from.id}/current.txt`;
   if (id < defaultSettings.length) {
-    const buffer = fs.readFileSync(`./settings/custom/${ctx.update.message.from.id}/current.txt`, {encoding:'utf8', flag:'r'}).split(` `); // profile id | modernCMU | singMode
-    buffer[0] = id;
-    fs.writeFileSync(settingsFileName, buffer.join(` `));
+    let currentSettings = getUserSettings(ctx.update.message.from.id);
+    currentSettings.id = id;
+    setUserSettings(ctx.update.message.from.id, currentSettings);
+    ctx.replyWithMarkdown(`Done! Profile \*\*\*${defaultSettings[id].name}\*\*\* active.`);
   } else {
     ctx.reply(`Wrong ID\nMin ID: 0 | Max ID: ${defaultSettings.length-1}\nYou try to set ID: ${id}`);
   }
+});
+
+bot.hears(/^(\/Enable|\/Disable|\/Toggle)_(Modern_CMU|Sing_mode)$/, (ctx) => {
+  const userSettings = getUserSettings(ctx.update.message.from.id);
+  userSettings[ctx.match[2] === `Modern_CMU` ? `modernCMU` : `singMode`] = ctx.match[1] === `/Toggle` ? !(userSettings[ctx.match[2] === `Modern_CMU` ? `modernCMU` : `singMode`]) : ctx.match[1] === `/Enable`;
+  setUserSettings(ctx.update.message.from.id, userSettings);
+  ctx.reply(`${userSettings.modernCMU} - ${userSettings.singMode}`);
 });
 
 bot.hears(/\/voice (.+)/, (ctx) => {

@@ -6,16 +6,15 @@ const SamJs = require(`./core/sam.js`).default;
 
 let pronunciationSettings = {
   modernCMU: true,
-  singmode: false,
+  singMode: false,
   pitch: 64,
   speed: 72,
   mouth: 128,
   throat: 128,
 }
 
-const Sam = (message = ``, filename = `sam.wav`, modernCMU = true, singMode = false, ...singSettings) => {
-  [pronunciationSettings.modernCMU, pronunciationSettings.singmode, pronunciationSettings.pitch,
-    pronunciationSettings.speed, pronunciationSettings.mouth, pronunciationSettings.throat] = [modernCMU, singSettings, ...singSettings];
+const Sam = (message = ``, filename = `sam.wav`, settings) => {
+  pronunciationSettings = settings;
   let sam = new SamJs(pronunciationSettings);
   fs.writeFileSync(`./audio/${filename}`, Buffer.from(sam.renderWav(message)));
 }

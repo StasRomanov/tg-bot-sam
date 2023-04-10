@@ -2523,17 +2523,17 @@ const CreateOutputBuffer = (bufferSize => {
  * @param {Number} [mouth]
  * @param {Number} [throat]
  * @param {Number} [speed]
- * @param {Boolean} [singmode]
+ * @param {Boolean} [singMode]
  *
  * @return Uint8Array
  */
 
-const Renderer = ((phonemes, pitch, mouth, throat, speed, singmode) => {
+const Renderer = ((phonemes, pitch, mouth, throat, speed, singMode) => {
   pitch = pitch === undefined ? 64 : pitch & 0xFF;
   mouth = mouth === undefined ? 128 : mouth & 0xFF;
   throat = throat === undefined ? 128 : throat & 0xFF;
   speed = (speed || 72) & 0xFF;
-  singmode = singmode || false; // Reserve 176.4*speed samples (=8*speed ms) for each frame.
+  singMode = singMode || false; // Reserve 176.4*speed samples (=8*speed ms) for each frame.
 
   let Output = CreateOutputBuffer(176.4 // = (22050/125)
   * phonemes.reduce((pre, v) => pre + v[1], 0) // Combined phoneme length in frames.
@@ -2762,7 +2762,7 @@ const Renderer = ((phonemes, pitch, mouth, throat, speed, singmode) => {
     const [pitches, frequency, amplitude, sampledConsonantFlag] = CreateFrames(pitch, tuples, freqdata);
     let t = CreateTransitions(pitches, frequency, amplitude, tuples);
 
-    if (!singmode) {
+    if (!singMode) {
       /* ASSIGN PITCH CONTOUR
        *
        * This subtracts the F1 frequency from the pitch to create a
@@ -2840,7 +2840,7 @@ let SamProcess = function (input) {
     return false;
   }
 
-  return Renderer(parsed, options.pitch, options.mouth, options.throat, options.speed, options.singmode);
+  return Renderer(parsed, options.pitch, options.mouth, options.throat, options.speed, options.singMode);
 };
 
 let convert = TextToPhonemes;
@@ -2850,7 +2850,7 @@ let renderWav = BufferToWav;
 /**
  * @param {object}  [options]
  * @param {Boolean} [options.phonetic]  Default false.
- * @param {Boolean} [options.singmode]  Default false.
+ * @param {Boolean} [options.singMode]  Default false.
  * @param {Boolean} [options.modernCMU] Default false.
  * @param {Boolean} [options.debug]     Default false.
  * @param {Number}  [options.pitch]     Default 64.
