@@ -4,6 +4,7 @@ audio
 token.txt
 settings/custom/*/*.*
 !settings/custom/user_id/*.*
+.DS_Store
 
 # IntelliJ project files
 .idea

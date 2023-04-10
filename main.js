@@ -1,112 +1,13 @@
 `use strict`;
 const {Telegraf, Input} = require('telegraf');
+const fs = require(`fs`)
+const {execSync} = require(`child_process`);
 const Sam = require(`./sam.js`)
-const fs = require("fs")
-const {execSync} = require("child_process");
+const {getUserSettings, setUserSettings, readSettings} = require(`./utils/settings-functions.js`);
+const {defaultSettingsFilename, debugMode, tokenFilename} = require("./data.js");
+const {getHash53, saveLogs} = require("./utils/data-functions.js");
 
-const token = fs.readFileSync('./token.txt', {encoding:'utf8', flag:'r'});
-process.env.BOT_TOKEN = token;
-const debugMode = false;
-const bot = new Telegraf(process.env.BOT_TOKEN);
-const defaultSettingsFilename = `./settings/default/default-settings.txt`;
-let defaultSettings = [];
-
-const getHash53 = (str, seed = 0) => {
-    let h1 = 0xdeadbeef^seed, h2 = 0xcafebabe^seed;
-    for (let i = 0, ch; i < str.length; i++) {
-        ch = str.charCodeAt(i);
-        h1 = Math.imul(h1 ^ ch, 2654435761);
-        h2 = Math.imul(h2 ^ ch, 1597334677);
-    }
-    h1  = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
-    h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-    h2  = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
-    h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-    return 4294967296 * (2097151 & h2) + (h1 >>> 0);
-};
-
-const formatNumbers = (number) => {
-  number = number.toString();
-  if (number.length >= 3) {
-    return number;
-  }
-  if (number.length >= 2) {
-    return ` `+number;
-  }
-  if (number.length >= 1) {
-    return ` `+number+`  `;
-  }
-}
-
-const getUserSettings = (id) => {
-  if (!fs.existsSync(`./settings/custom/${id}/`)) {
-    fs.mkdirSync(`./settings/custom/${id}/`);
-    fs.writeFileSync(`./settings/custom/${id}/all.txt`, ``);
-    fs.writeFileSync(`./settings/custom/${id}/current.txt`, `0 1 0`); // profile id | modernCMU | singMode
-  }
-  let userSettings = fs.readFileSync(`./settings/custom/${id}/current.txt`, {encoding:'utf8', flag:'r'}).split(` `).map((item, index) => index < 1 ? Number(item):Boolean(Number(item)));
-  if (userSettings[0] < defaultSettings.length) {
-    userSettings.push(...Object.values(defaultSettings[userSettings[0]].stats));
-  }
-  let i = 0;
-  userSettings = {
-    id: userSettings[i++],
-    modernCMU: userSettings[i++],
-    singMode: userSettings[i++],
-    pitch: userSettings[i++],
-    speed: userSettings[i++],
-    mouth: userSettings[i++],
-    throat: userSettings[i++],
-  }
-  return userSettings;
-}
-
-const setUserSettings = (id, settings) => {
-  const settingsFileName = `./settings/custom/${id}/current.txt`;
-  fs.writeFileSync(settingsFileName, Object.values(settings).slice(0, 3).map((item) => Number(item)).join(` `));
-}
-
-const readSettings = (filename) => {
-  let buffer = [];
-  let fileContent = fs.readFileSync(filename, {encoding:'utf8', flag:'r'}).split(`\n`).map((item, index) => {
-    if (index % 2) {
-      return item.split(` `).map((value) => Number(value));
-    } else {
-      return [[Number(item.split(` `).shift()), item.split(` `).filter((item, index) => index > 0).join(` `)]];
-    }
-  });
-  fileContent.forEach((item, index, array) => {
-    if (!(index % 2)) {
-      buffer.push({
-        id: item[0][0],
-        name: item[0][1],
-        stats: {
-          pitch: array[index+1][0],
-          speed: array[index+1][1],
-          mouth: array[index+1][2],
-          throat: array[index+1][3],
-        },
-        formattedStats: {
-          pitch: formatNumbers(array[index+1][0]),
-          speed: formatNumbers(array[index+1][1]),
-          mouth: formatNumbers(array[index+1][2]),
-          throat: formatNumbers(array[index+1][3]),
-        },
-      });
-    }
-  })
-  return buffer;
-}
-
-const saveLogs = (ctx) => {
-  const log = {
-    match: structuredClone(ctx.match),
-    update: structuredClone(ctx.update),
-    botInfo: structuredClone(ctx.botInfo),
-  };
-  fs.writeFileSync(`./logs/${log.update.message.date}-${log.update.message.from.username}-${log.update.message.from.id}.log`,
-    JSON.stringify(log, null, 2))
-}
+const bot = new Telegraf(fs.readFileSync(tokenFilename, {encoding:'utf8', flag:'r'}));
 
 const makeAudio = (text, settings) => {
   const wavName = `sam.wav`;
