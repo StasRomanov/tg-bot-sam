@@ -12,7 +12,7 @@ const defaultSettingsFilename = `./settings/default/default-settings.txt`;
 let defaultSettings = [];
 
 const getHash53 = (str, seed = 0) => {
-    let h1 = 0xdeadbeef^seed, h2 = 0x41c6ce57^seed;
+    let h1 = 0xdeadbeef^seed, h2 = 0xcafebabe^seed;
     for (let i = 0, ch; i < str.length; i++) {
         ch = str.charCodeAt(i);
         h1 = Math.imul(h1 ^ ch, 2654435761);

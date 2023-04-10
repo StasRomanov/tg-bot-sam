@@ -1,2 +1,4 @@
 all settings like in default-settings.txt file
 but id different and less that 100
+-
+at current version unsupported
