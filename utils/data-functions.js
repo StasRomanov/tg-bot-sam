@@ -1,5 +1,8 @@
 `use strict`;
 const fs = require(`fs`);
+const {debugMode} = require("../data");
+const child_process = require("child_process");
+const SamJs = require(`./../core/sam.js`).default;
 
 const formatNumbers = (number) => {
   number = number.toString();
@@ -34,8 +37,28 @@ const saveLogs = (ctx) => {
     update: structuredClone(ctx.update),
     botInfo: structuredClone(ctx.botInfo),
   };
-  fs.writeFileSync(`./../logs/${log.update.message.date}-${log.update.message.from.username}-${log.update.message.from.id}.log`,
+  fs.writeFileSync(`./logs/${log.update.message.date}-${log.update.message.from.username}-${log.update.message.from.id}.log`,
     JSON.stringify(log, null, 2))
 }
 
-module.exports = {formatNumbers, getHash53, saveLogs};
+const makeAudio = (text, settings) => {
+  const wavName = `sam.wav`;
+  let audioName = ``;
+  const start = Date.now();
+  const sam = new SamJs(settings);
+  fs.writeFileSync(`./audio/${wavName}`, Buffer.from(sam.renderWav(text.trim())));
+  const end = Date.now();
+  if (debugMode) {
+    console.log(`Sam-time: ${end - start} ms`);
+    console.log(new Date(new Date().getTime()).toString(), text);
+  }
+  text = text.trim().replace(/[^\w\s]/gi, ``).replace(/\s+/g, `_`);
+  audioName = text.length <= 100 ? text : `voice-${getHash53(audioName, Date.now())}`;
+  const wavFileName = `./audio/${wavName}`;
+  const mp3FileName = `./audio/${audioName}.mp3`;
+  const ffmpegFlags = `-y -loglevel warning`;
+  child_process.execSync(`ffmpeg -i ${wavFileName} ${mp3FileName} ${ffmpegFlags}`);
+  return mp3FileName;
+}
+
+module.exports = {formatNumbers, getHash53, saveLogs, makeAudio};

@@ -1,7 +1,7 @@
 `use strict`;
 const fs = require(`fs`);
-const {defaultSettings} = require(`./data.js`);
-const {formatNumbers} = require(`./data-functions`);
+const {defaultSettings} = require(`./../data.js`);
+const {formatNumbers} = require(`./data-functions.js`);
 
 
 const getUserSettings = (id) => {

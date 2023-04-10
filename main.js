@@ -1,32 +1,10 @@
 `use strict`;
 const {Telegraf, Input} = require('telegraf');
 const fs = require(`fs`)
-const {execSync} = require(`child_process`);
-const Sam = require(`./sam.js`)
 const {getUserSettings, setUserSettings, readSettings} = require(`./utils/settings-functions.js`);
-const {defaultSettingsFilename, debugMode, tokenFilename} = require("./data.js");
-const {getHash53, saveLogs} = require("./utils/data-functions.js");
-
+const {defaultSettingsFilename, tokenFilename} = require("./data.js");
+const {saveLogs, makeAudio} = require("./utils/data-functions.js");
 const bot = new Telegraf(fs.readFileSync(tokenFilename, {encoding:'utf8', flag:'r'}));
-
-const makeAudio = (text, settings) => {
-  const wavName = `sam.wav`;
-  let audioName = ``;
-  const start = Date.now();
-  Sam(text.trim(), wavName, settings);
-  const end = Date.now();
-  if (debugMode) {
-    console.log(`Sam-time: ${end - start} ms`);
-    console.log(new Date(new Date().getTime()).toString(), text);
-  }
-  text = text.trim().replace(/[^\w\s]/gi, ``).replace(/\s+/g, `_`);
-  audioName = text.length <= 100 ? text : `voice-${getHash53(audioName, Date.now())}`;
-  const wavFileName = `./audio/sam.wav`;
-  const mp3FileName = `./audio/${audioName}.mp3`;
-  const ffmpegFlags = `-y -loglevel warning`;
-  execSync(`ffmpeg -i ${wavFileName} ${mp3FileName} ${ffmpegFlags}`);
-  return mp3FileName;
-}
 
 bot.start(async (ctx) => {
   saveLogs(ctx);
