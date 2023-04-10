@@ -127,12 +127,12 @@ const makeAudio = (text, settings) => {
   return mp3FileName;
 }
 
-bot.start((ctx) => {
+bot.start(async (ctx) => {
   saveLogs(ctx);
   getUserSettings(ctx.update.message.from.id);
   const startMsg = `Hello, I am SAM - Software Automatic Mouth!`;
   ctx.reply(startMsg);
-  ctx.replyWithDocument(Input.fromLocalFile(`./media/Michael\ Davies\ Crawl.gif`));
+  await ctx.replyWithAnimation({source : `./media/Michael\ Davies\ Crawl.gif`});
 });
 
 bot.help((ctx) => {
@@ -188,7 +188,7 @@ bot.hears(/\/voice (.+)/, (ctx) => {
 bot.hears(/\/ping/, (ctx) => ctx.reply(`SAM alive !`));
 bot.hears(/\/echo/, (ctx) => ctx.reply(ctx.match[1]));
 
-defaultSettings = readSettings(defaultSettingsFilename); //generate default settings
+defaultSettings = readSettings(defaultSettingsFilename);
 bot.launch();
 // Enable graceful stop
 process.once('SIGINT', () => bot.stop('SIGINT'));
