@@ -16,17 +16,18 @@ bot.start(async (ctx) => {
 
 bot.help((ctx) => {
   saveLogs(ctx);
-  const helpMsg = `Use \/voice and write text to get audio.`;
+  const helpMsg = `\/voice "text to get audio."`;
+  ctx.replyWithAudio({source: makeAudio(`text to get audio.`, getUserSettings(ctx.update.message.from.id))});
   ctx.reply(helpMsg);
 });
 
-bot.hears(/\/Show_current_profile/, (ctx) => {
+bot.hears(/\/show_current_profile/, (ctx) => {
   saveLogs(ctx);
   const spaceCount = 3;
   ctx.replyWithMarkdown(`Current profile: ${defaultSettings[0].name}\n\`\`\`\npitch${``.padEnd(spaceCount, ` `)}speed${``.padEnd(spaceCount, ` `)}mouth${``.padEnd(spaceCount, ` `)}throat\n ${defaultSettings[0].formattedStats.pitch}${``.padEnd(5, ` `)}${defaultSettings[0].formattedStats.speed}${``.padEnd(5, ` `)}${defaultSettings[0].formattedStats.mouth}${``.padEnd(6, ` `)}${defaultSettings[0].formattedStats.throat}\n\`\`\``);
 });
 
-bot.hears(/\/Show_all_profiles/, (ctx) => {
+bot.hears(/\/show_all_profiles/, (ctx) => {
   saveLogs(ctx);
   let responseBuffer = ``;
   const spaceCount = 3;
@@ -34,12 +35,12 @@ bot.hears(/\/Show_all_profiles/, (ctx) => {
   ctx.replyWithMarkdown(responseBuffer);
 });
 
-bot.hears(/\/Show_faith_profiles/, async (ctx) => {
+bot.hears(/\/show_faith_profiles/, async (ctx) => {
   saveLogs(ctx);
   await ctx.replyWithPhoto(Input.fromLocalFile(`./media/wiki-guide.jpeg`));
 });
 
-bot.hears(/\/Set_profile_by_id (.+)/, (ctx) => {
+bot.hears(/\/set_profile_by_id (.+)/, (ctx) => {
   saveLogs(ctx);
   const id = ctx.match[1];
   if (id < defaultSettings.length) {
@@ -52,9 +53,9 @@ bot.hears(/\/Set_profile_by_id (.+)/, (ctx) => {
   }
 });
 
-bot.hears(/^(\/Enable|\/Disable|\/Toggle)_(Modern_CMU|Sing_mode)$/, (ctx) => {
+bot.hears(/^(\/enable|\/disable|\/toggle)_(modern_cmu|sing_mode)$/, (ctx) => {
   const userSettings = getUserSettings(ctx.update.message.from.id);
-  userSettings[ctx.match[2] === `Modern_CMU` ? `modernCMU` : `singMode`] = ctx.match[1] === `/Toggle` ? !(userSettings[ctx.match[2] === `Modern_CMU` ? `modernCMU` : `singMode`]) : ctx.match[1] === `/Enable`;
+  userSettings[ctx.match[2] === `modern_cmu` ? `modernCMU` : `singMode`] = ctx.match[1] === `/toggle` ? !(userSettings[ctx.match[2] === `modern_cmu` ? `modernCMU` : `singMode`]) : ctx.match[1] === `/enable`;
   setUserSettings(ctx.update.message.from.id, userSettings);
   ctx.reply(`${userSettings.modernCMU} - ${userSettings.singMode}`);
 });
