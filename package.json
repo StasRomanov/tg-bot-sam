@@ -8,8 +8,8 @@
     "telegraf": "4.12.2",
     "to-words": "3.5.0"
   },
-  "scripts": {},
-  "devDependencies": {
-    "process": "0.11.10"
-  }
+  "scripts": {
+    "run": "node ./main.js"
+  },
+  "devDependencies": {}
 }

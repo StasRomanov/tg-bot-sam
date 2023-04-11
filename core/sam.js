@@ -514,10 +514,6 @@ let reciterRule = ruleString => {
 
   let result = (text, inputPos, callback) => {
     if (matches(text, inputPos)) {
-      {
-        ////console.log("".concat(source, " -> ").concat(target));
-      }
-
       callback(target, match.length);
       return true;
     }
@@ -1241,53 +1237,30 @@ const Parser2 = ((insertPhoneme, setPhoneme, getPhoneme, getStress) => {
     switch (phoneme) {
       // 'UW' Example: NEW, DEW, SUE, ZOO, THOO, TOO
       case 53:
-        {
-          // ALVEOLAR flag set?
-          if (phonemeHasFlag(getPhoneme(pos - 1), FLAG_ALVEOLAR)) {
-            setPhoneme(pos, 16); // UX
-          }
-          break;
+        // ALVEOLAR flag set?
+        if (phonemeHasFlag(getPhoneme(pos - 1), FLAG_ALVEOLAR)) {
+          setPhoneme(pos, 16); // UX
         }
+        break;
       // 'CH' Example: CHEW
 
       case 42:
-        {
-          {
-            ////console.log("".concat(pos, " RULE: CH -> CH CH+1"));
-          }
-
-          insertPhoneme(pos + 1, 43, getStress(pos)); // '**'
-
-          break;
-        }
+        insertPhoneme(pos + 1, 43, getStress(pos)); // '**'
+        break;
       // 'J*' Example: JAY
 
       case 44:
-        {
-          {
-            ////console.log("".concat(pos, " RULE: J -> J J+1"));
-          }
-
-          insertPhoneme(pos + 1, 45, getStress(pos)); // '**'
-
-          break;
-        }
+        insertPhoneme(pos + 1, 45, getStress(pos)); // '**'
+        break;
     }
   };
 
   let changeAX = (position, suffix) => {
-    {
-      ////console.log("".concat(position, " RULE: ").concat(PhonemeNameTable[getPhoneme(position)], " -> AX ").concat(PhonemeNameTable[suffix]));
-    }
-
     setPhoneme(position, 13); // 'AX'
-
     insertPhoneme(position + 1, suffix, getStress(position));
   };
-
   let pos = -1;
   let phoneme;
-
   while ((phoneme = getPhoneme(++pos)) !== END) {
     // Is phoneme pause?
     if (phoneme === 0) {
@@ -1298,13 +1271,9 @@ const Parser2 = ((insertPhoneme, setPhoneme, getPhoneme, getStress) => {
       // <DIPHTHONG ENDING WITH WX> -> <DIPHTHONG ENDING WITH WX> WX
       // <DIPHTHONG NOT ENDING WITH WX> -> <DIPHTHONG NOT ENDING WITH WX> YX
       // Example: OIL, COW
-      {
-        ////console.log(!phonemeHasFlag(phoneme, FLAG_DIP_YX) ? "".concat(pos, " RULE: insert WX following diphthong NOT ending in IY sound") : "".concat(pos, " RULE: insert YX following diphthong ending in IY sound"));
-      } // If ends with IY, use YX, else use WX
+      // If ends with IY, use YX, else use WX
       // Insert at WX or YX following, copying the stress
       // 'WX' = 20 'YX' = 21
-
-
       insertPhoneme(pos + 1, phonemeHasFlag(phoneme, FLAG_DIP_YX) ? 21 : 20, getStress(pos));
       handleUW_CH_J(phoneme, pos);
       continue;
@@ -1338,12 +1307,7 @@ const Parser2 = ((insertPhoneme, setPhoneme, getPhoneme, getStress) => {
       if (!getPhoneme(pos + 1)) {
         // If following phoneme is a pause, get next
         phoneme = getPhoneme(pos + 2);
-
         if (phoneme !== END && phonemeHasFlag(phoneme, FLAG_VOWEL) && getStress(pos + 2)) {
-          {
-            ////console.log("".concat(pos + 2, " RULE: Insert glottal stop between two stressed vowels with space between them"));
-          }
-
           insertPhoneme(pos + 2, 31, 0); // 31 = 'Q'
         }
       }
@@ -1357,37 +1321,19 @@ const Parser2 = ((insertPhoneme, setPhoneme, getPhoneme, getStress) => {
       // RULES FOR PHONEMES BEFORE R
       switch (priorPhoneme) {
         case pT:
-          {
-            // Example: TRACK
-            {
-              ////console.log("".concat(pos, " RULE: T* R* -> CH R*"));
-            }
-
-            setPhoneme(pos - 1, 42); // 'T*' 'R*' -> 'CH' 'R*'
-
-            break;
-          }
+          // Example: TRACK
+          setPhoneme(pos - 1, 42); // 'T*' 'R*' -> 'CH' 'R*'
+          break;
 
         case pD:
-          {
-            // Example: DRY
-            {
-              ////console.log("".concat(pos, " RULE: D* R* -> J* R*"));
-            }
-
-            setPhoneme(pos - 1, 44); // 'J*'
-
-            break;
-          }
+          // Example: DRY
+          setPhoneme(pos - 1, 44); // 'J*'
+          break;
 
         default:
           {
             if (phonemeHasFlag(priorPhoneme, FLAG_VOWEL)) {
               // Example: ART
-              {
-                ////console.log("".concat(pos, " <VOWEL> R* -> <VOWEL> RX"));
-              }
-
               setPhoneme(pos, 18); // 'RX'
             }
           }
@@ -1399,12 +1345,7 @@ const Parser2 = ((insertPhoneme, setPhoneme, getPhoneme, getStress) => {
 
     if (phoneme === 24 && phonemeHasFlag(priorPhoneme, FLAG_VOWEL)) {
       // Example: ALL
-      {
-        ////console.log("".concat(pos, " <VOWEL> L* -> <VOWEL> LX"));
-      }
-
       setPhoneme(pos, 19); // 'LX'
-
       continue;
     } // 'G*' 'S*'
 
@@ -1413,10 +1354,6 @@ const Parser2 = ((insertPhoneme, setPhoneme, getPhoneme, getStress) => {
       // Can't get to fire -
       //       1. The G -> GX rule intervenes
       //       2. Reciter already replaces GS -> GZ
-      {
-        ////console.log("".concat(pos, " G S -> G Z"));
-      }
-
       setPhoneme(pos, 38);
       continue;
     } // 'G*'
@@ -1429,16 +1366,10 @@ const Parser2 = ((insertPhoneme, setPhoneme, getPhoneme, getStress) => {
 
       if (!phonemeHasFlag(phoneme, FLAG_DIP_YX) && phoneme !== END) {
         // replace G with GX and continue processing next phoneme
-        {
-          ////console.log("".concat(pos, " RULE: G <VOWEL OR DIPTHONG NOT ENDING WITH IY> -> GX <VOWEL OR DIPTHONG NOT ENDING WITH IY>"));
-        }
-
         setPhoneme(pos, 63); // 'GX'
       }
-
       continue;
     } // 'K*'
-
 
     if (phoneme === 72) {
       // K <VOWEL OR DIPHTHONG NOT ENDING WITH IY> -> KX <VOWEL OR DIPHTHONG NOT ENDING WITH IY>
@@ -1447,15 +1378,10 @@ const Parser2 = ((insertPhoneme, setPhoneme, getPhoneme, getStress) => {
 
       if (!phonemeHasFlag(Y, FLAG_DIP_YX) || Y === END) {
         // VOWELS AND DIPHTHONGS ENDING WITH IY SOUND flag set?
-        {
-          ////console.log("".concat(pos, " K <VOWEL OR DIPTHONG NOT ENDING WITH IY> -> KX <VOWEL OR DIPTHONG NOT ENDING WITH IY>"));
-        }
-
         setPhoneme(pos, 75);
         phoneme = 75;
       }
     } // Replace with softer version?
-
 
     if (phonemeHasFlag(phoneme, FLAG_UNVOICED_STOPCONS) && priorPhoneme === 32) {
       // 'S*'
@@ -1467,9 +1393,6 @@ const Parser2 = ((insertPhoneme, setPhoneme, getPhoneme, getStress) => {
       //   'S*' 'UM' -> 'S*' '**'
       //   'S*' 'UN' -> 'S*' '**'
       // Examples: SPY, STY, SKY, SCOWL
-      {
-        ////console.log("".concat(pos, " RULE: S* ").concat(PhonemeNameTable[phoneme], " -> S* ").concat(PhonemeNameTable[phoneme - 12]));
-      }
 
       setPhoneme(pos, phoneme - 12);
     } else if (!phonemeHasFlag(phoneme, FLAG_UNVOICED_STOPCONS)) {
@@ -1491,22 +1414,11 @@ const Parser2 = ((insertPhoneme, setPhoneme, getPhoneme, getStress) => {
         }
 
         if (phonemeHasFlag(phoneme, FLAG_VOWEL) && !getStress(pos + 1)) {
-          {
-            ////console.log("".concat(pos, " Soften T or D following vowel or ER and preceding a pause -> DX"));
-          }
-
           setPhoneme(pos, 30);
         }
       }
-
-      continue;
-    }
-
-    {
-      ////console.log("".concat(pos, ": ").concat(PhonemeNameTable[phoneme]));
     }
   } // while
-
 });
 
 const AdjustLengths = ((getPhoneme, setLength, getLength) => {
@@ -1562,11 +1474,7 @@ const AdjustLengths = ((getPhoneme, setLength, getLength) => {
         // 'RX' or 'LX'?
         if ((phoneme === 18 || phoneme === 19) && phonemeHasFlag(getPhoneme(++position), FLAG_CONSONANT)) {
           // followed by consonant?
-          {
-            ////console.log(loopIndex + ' RULE: <VOWEL ' + PhonemeNameTable[getPhoneme(loopIndex)] + '>' + PhonemeNameTable[phoneme] + ' <CONSONANT: ' + PhonemeNameTable[getPhoneme(position)] + '> - decrease length of vowel by 1');
-          } // decrease length of vowel by 1 frame
-
-
+          // decrease length of vowel by 1 frame
           setLength(loopIndex, getLength(loopIndex) - 1);
         }
 
@@ -1583,10 +1491,6 @@ const AdjustLengths = ((getPhoneme, setLength, getLength) => {
         if (matchesBitmask(flags, FLAG_UNVOICED_STOPCONS)) {
           // RULE: <VOWEL> <UNVOICED PLOSIVE>
           // <VOWEL> <P*, T*, K*, KX>
-          {
-            ////console.log("".concat(loopIndex, " <VOWEL> <UNVOICED PLOSIVE> - decrease vowel by 1/8th"));
-          }
-
           let A = getLength(loopIndex);
           setLength(loopIndex, A - (A >> 3));
         }
@@ -1595,16 +1499,9 @@ const AdjustLengths = ((getPhoneme, setLength, getLength) => {
       } // RULE: <VOWEL> <VOWEL or VOICED CONSONANT>
       // <VOWEL> <IY, IH, EH, AE, AA, AH, AO, UH, AX, IX, ER, UX, OH, RX, LX, WX, YX, WH, R*, L*, W*,
       //          Y*, M*, N*, NX, Q*, Z*, ZH, V*, DH, J*, EY, AY, OY, AW, OW, UW, B*, D*, G*, GX>
-
-
-      {
-        ////console.log("".concat(loopIndex, " RULE: <VOWEL> <VOWEL or VOICED CONSONANT> - increase vowel by 1/4 + 1"));
-      } // increase length
-
-
+      // increase length
       let A = getLength(loopIndex);
       setLength(loopIndex, (A >> 2) + A + 1); // 5/4*A + 1
-
       continue;
     } //  *, .*, ?*, ,*, -*, WH, R*, L*, W*, Y*, M*, N*, NX, DX, Q*, S*, SH, F*,
     // TH, /H, /X, Z*, ZH, V*, DH, CH, J*, B*, D*, G*, GX, P*, T*, K*, KX
@@ -1620,15 +1517,9 @@ const AdjustLengths = ((getPhoneme, setLength, getLength) => {
 
       if (phoneme !== END && phonemeHasFlag(phoneme, FLAG_STOPCONS)) {
         // B*, D*, G*, GX, P*, T*, K*, KX
-        {
-          ////console.log("".concat(position, " RULE: <NASAL> <STOP CONSONANT> - set nasal = 5, consonant = 6"));
-        }
-
         setLength(position, 6); // set stop consonant length to 6
-
         setLength(position - 1, 5); // set nasal length to 5
       }
-
       continue;
     } //  *, .*, ?*, ,*, -*, WH, R*, L*, W*, Y*, DX, Q*, S*, SH, F*, TH,
     // /H, /X, Z*, ZH, V*, DH, CH, J*, B*, D*, G*, GX, P*, T*, K*, KX
@@ -1646,14 +1537,9 @@ const AdjustLengths = ((getPhoneme, setLength, getLength) => {
 
       if (phoneme !== END && phonemeHasFlag(phoneme, FLAG_STOPCONS)) {
         // RULE: <STOP CONSONANT> {optional silence} <STOP CONSONANT>
-        {
-          ////console.log("".concat(position, " RULE: <STOP CONSONANT> {optional silence} <STOP CONSONANT> - shorten both to 1/2 + 1"));
-        }
-
         setLength(position, (getLength(position) >> 1) + 1);
         setLength(loopIndex, (getLength(loopIndex) >> 1) + 1);
       }
-
       continue;
     } //  *, .*, ?*, ,*, -*, WH, R*, L*, W*, Y*, DX, Q*, S*, SH, F*, TH,
     // /H, /X, Z*, ZH, V*, DH, CH, J*
@@ -1665,11 +1551,7 @@ const AdjustLengths = ((getPhoneme, setLength, getLength) => {
       // RULE: <STOP CONSONANT> <LIQUID>
       //       Decrease <LIQUID> by 2
       // prior phoneme is a stop consonant
-      {
-        ////console.log("".concat(position, " RULE: <STOP CONSONANT> <LIQUID> - decrease by 2"));
-      } // decrease the phoneme length by 2 frames
-
-
+      // decrease the phoneme length by 2 frames
       setLength(position, getLength(position) - 2);
     }
   }
@@ -1809,10 +1691,6 @@ const Parser = (input => {
   };
 
   let setPhoneme = (pos, value) => {
-    {
-      ////console.log("".concat(pos, " CHANGE: ").concat(PhonemeNameTable[phonemeindex[pos]], " -> ").concat(PhonemeNameTable[value]));
-    }
-
     phonemeindex[pos] = value;
   };
   /**
@@ -1826,10 +1704,6 @@ const Parser = (input => {
 
 
   let insertPhoneme = (pos, value, stressValue, length) => {
-    {
-      ////console.log("".concat(pos, " INSERT: ").concat(PhonemeNameTable[value]));
-    }
-
     for (let i = phonemeindex.length - 1; i >= pos; i--) {
       phonemeindex[i + 1] = phonemeindex[i];
       phonemeLength[i + 1] = getLength(i);
@@ -1844,10 +1718,6 @@ const Parser = (input => {
   let getStress = pos => stress[pos] | 0;
 
   let setStress = (pos, stressValue) => {
-    {
-      ////console.log("".concat(pos, " \"").concat(PhonemeNameTable[phonemeindex[pos]], "\" SET STRESS: ").concat(stress[pos], " -> ").concat(stressValue));
-    }
-
     stress[pos] = stressValue;
   };
 
@@ -1855,8 +1725,6 @@ const Parser = (input => {
 
   let setLength = (pos, length) => {
     {
-      ////console.log("".concat(pos, " \"").concat(PhonemeNameTable[phonemeindex[pos]], "\" SET LENGTH: ").concat(phonemeLength[pos], " -> ").concat(length));
-
       if ((length & 128) !== 0) {
         throw new Error('Got the flag 0x80, see CopyStress() and SetPhonemeLength() comments!');
       }

@@ -1,10 +1,10 @@
 `use strict`;
-const {Telegraf, Input} = require('telegraf');
-const fs = require(`fs`)
+const {Telegraf, Input} = require(`telegraf`);
+const fs = require(`fs`);
 const {getUserSettings, setUserSettings, readSettings} = require(`./utils/settings-functions.js`);
-const {defaultSettingsFilename, tokenFilename} = require("./data.js");
-const {saveLogs, makeAudio} = require("./utils/data-functions.js");
-const bot = new Telegraf(fs.readFileSync(tokenFilename, {encoding:'utf8', flag:'r'}));
+const {defaultSettingsFilename, tokenFilename} = require(`./data.js`);
+const {saveLogs, makeAudio} = require(`./utils/data-functions.js`);
+const bot = new Telegraf(fs.readFileSync(tokenFilename, {encoding:`utf8`, flag:`r`}));
 
 bot.start(async (ctx) => {
   saveLogs(ctx);
@@ -16,20 +16,20 @@ bot.start(async (ctx) => {
 
 bot.help((ctx) => {
   saveLogs(ctx);
-  const helpMsg = `Use \/voice and write text to get audio.`
+  const helpMsg = `Use \/voice and write text to get audio.`;
   ctx.reply(helpMsg);
 });
 
 bot.hears(/\/Show_current_profile/, (ctx) => {
   saveLogs(ctx);
-  const spaceCount = 3
+  const spaceCount = 3;
   ctx.replyWithMarkdown(`Current profile: ${defaultSettings[0].name}\n\`\`\`\npitch${``.padEnd(spaceCount, ` `)}speed${``.padEnd(spaceCount, ` `)}mouth${``.padEnd(spaceCount, ` `)}throat\n ${defaultSettings[0].formattedStats.pitch}${``.padEnd(5, ` `)}${defaultSettings[0].formattedStats.speed}${``.padEnd(5, ` `)}${defaultSettings[0].formattedStats.mouth}${``.padEnd(6, ` `)}${defaultSettings[0].formattedStats.throat}\n\`\`\``);
 });
 
 bot.hears(/\/Show_all_profiles/, (ctx) => {
   saveLogs(ctx);
   let responseBuffer = ``;
-  const spaceCount = 3
+  const spaceCount = 3;
   defaultSettings.forEach((item) => responseBuffer+=`Profile: \*\*\*${item.name}\*\*\* | id: ${item.id}\n\`\`\`\npitch${``.padEnd(spaceCount, ` `)}speed${``.padEnd(spaceCount, ` `)}mouth${``.padEnd(spaceCount, ` `)}throat\n ${item.formattedStats.pitch}${``.padEnd(5, ` `)}${item.formattedStats.speed}${``.padEnd(5, ` `)}${item.formattedStats.mouth}${``.padEnd(6, ` `)}${item.formattedStats.throat}\n\n\`\`\``);
   ctx.replyWithMarkdown(responseBuffer);
 });
@@ -61,7 +61,7 @@ bot.hears(/^(\/Enable|\/Disable|\/Toggle)_(Modern_CMU|Sing_mode)$/, (ctx) => {
 
 bot.hears(/\/voice (.+)/, (ctx) => {
   saveLogs(ctx);
-  ctx.replyWithAudio({source: makeAudio(ctx.match[1], getUserSettings(ctx.update.message.from.id))})
+  ctx.replyWithAudio({source: makeAudio(ctx.match[1], getUserSettings(ctx.update.message.from.id))});
 });
 
 bot.hears(/\/ping/, (ctx) => ctx.reply(`SAM alive !`));
@@ -70,5 +70,5 @@ bot.hears(/\/echo/, (ctx) => ctx.reply(ctx.match[1]));
 defaultSettings = readSettings(defaultSettingsFilename);
 bot.launch();
 // Enable graceful stop
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+process.once(`SIGINT`, () => bot.stop(`SIGINT`));
+process.once(`SIGTERM`, () => bot.stop(`SIGTERM`));

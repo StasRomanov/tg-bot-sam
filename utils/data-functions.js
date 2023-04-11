@@ -1,7 +1,7 @@
 `use strict`;
 const fs = require(`fs`);
-const {debugMode} = require("../data");
-const child_process = require("child_process");
+const {debugMode} = require(`../data`);
+const child_process = require(`child_process`);
 const SamJs = require(`./../core/sam.js`).default;
 
 const formatNumbers = (number) => {
