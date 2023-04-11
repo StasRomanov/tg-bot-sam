@@ -1,8 +1,9 @@
 `use strict`;
 const fs = require(`fs`);
-const {defaultSettings} = require(`./../data.js`);
 const {formatNumbers} = require(`./data-functions.js`);
+const {defaultSettingsFilename} = require("../data.js");
 
+let defaultSettings = [];
 
 const getUserSettings = (id) => {
   if (!fs.existsSync(`./settings/custom/${id}/`)) {
@@ -52,16 +53,12 @@ const readSettings = (filename) => {
           mouth: array[index+1][2],
           throat: array[index+1][3],
         },
-        formattedStats: {
-          pitch: formatNumbers(array[index+1][0]),
-          speed: formatNumbers(array[index+1][1]),
-          mouth: formatNumbers(array[index+1][2]),
-          throat: formatNumbers(array[index+1][3]),
-        },
       });
     }
   })
   return buffer;
 }
 
-module.exports = {getUserSettings, setUserSettings, readSettings, formatNumbers};
+defaultSettings = readSettings(defaultSettingsFilename);
+
+module.exports = {getUserSettings, setUserSettings, readSettings, formatNumbers, defaultSettings};

@@ -1,9 +1,10 @@
 `use strict`;
 const {Telegraf, Input} = require(`telegraf`);
 const fs = require(`fs`);
-const {getUserSettings, setUserSettings, readSettings} = require(`./utils/settings-functions.js`);
-const {defaultSettingsFilename, tokenFilename} = require(`./data.js`);
-const {saveLogs, makeAudio} = require(`./utils/data-functions.js`);
+const {getUserSettings, setUserSettings, defaultSettings} = require(`./utils/settings-functions.js`);
+const {tokenFilename} = require(`./data.js`);
+const {saveLogs, makeAudio, formatNumbers} = require(`./utils/data-functions.js`);
+
 const bot = new Telegraf(fs.readFileSync(tokenFilename, {encoding:`utf8`, flag:`r`}));
 
 bot.start(async (ctx) => {
@@ -12,6 +13,7 @@ bot.start(async (ctx) => {
   const startMsg = `Hello, I am SAM - Software Automatic Mouth!`;
   ctx.reply(startMsg);
   await ctx.replyWithAnimation({source : `./media/Michael\ Davies\ Crawl.gif`});
+  ctx.replyWithAudio({source: `./media/sam-story.mp3`});
 });
 
 bot.help((ctx) => {
@@ -24,14 +26,16 @@ bot.help((ctx) => {
 bot.hears(/\/show_current_profile/, (ctx) => {
   saveLogs(ctx);
   const spaceCount = 3;
-  ctx.replyWithMarkdown(`Current profile: ${defaultSettings[0].name}\n\`\`\`\npitch${``.padEnd(spaceCount, ` `)}speed${``.padEnd(spaceCount, ` `)}mouth${``.padEnd(spaceCount, ` `)}throat\n ${defaultSettings[0].formattedStats.pitch}${``.padEnd(5, ` `)}${defaultSettings[0].formattedStats.speed}${``.padEnd(5, ` `)}${defaultSettings[0].formattedStats.mouth}${``.padEnd(6, ` `)}${defaultSettings[0].formattedStats.throat}\n\`\`\``);
+  const currentProfile = getUserSettings(ctx.update.message.from.id);
+  console.log(currentProfile);
+  ctx.replyWithMarkdown(`Current profile: ${defaultSettings[currentProfile.id].name}\n\`\`\`\npitch${``.padEnd(spaceCount, ` `)}speed${``.padEnd(spaceCount, ` `)}mouth${``.padEnd(spaceCount, ` `)}throat\n ${formatNumbers(currentProfile.pitch)}${``.padEnd(5, ` `)}${formatNumbers(currentProfile.speed)}${``.padEnd(5, ` `)}${formatNumbers(currentProfile.mouth)}${``.padEnd(6, ` `)}${formatNumbers(currentProfile.throat)}\n\`\`\`Modern CMU: ${currentProfile.modernCMU? `Enable`: `Disable`} | Sing mode: ${currentProfile.singMode? `Enable`: `Disable`}`);
 });
 
 bot.hears(/\/show_all_profiles/, (ctx) => {
   saveLogs(ctx);
   let responseBuffer = ``;
   const spaceCount = 3;
-  defaultSettings.forEach((item) => responseBuffer+=`Profile: \*\*\*${item.name}\*\*\* | id: ${item.id}\n\`\`\`\npitch${``.padEnd(spaceCount, ` `)}speed${``.padEnd(spaceCount, ` `)}mouth${``.padEnd(spaceCount, ` `)}throat\n ${item.formattedStats.pitch}${``.padEnd(5, ` `)}${item.formattedStats.speed}${``.padEnd(5, ` `)}${item.formattedStats.mouth}${``.padEnd(6, ` `)}${item.formattedStats.throat}\n\n\`\`\``);
+  defaultSettings.forEach((item) => responseBuffer+=`Profile: \*\*\*${item.name}\*\*\* | id: ${item.id}\n\`\`\`\npitch${``.padEnd(spaceCount, ` `)}speed${``.padEnd(spaceCount, ` `)}mouth${``.padEnd(spaceCount, ` `)}throat\n ${formatNumbers(item.stats.pitch)}${``.padEnd(5, ` `)}${formatNumbers(item.stats.speed)}${``.padEnd(5, ` `)}${formatNumbers(item.stats.mouth)}${``.padEnd(6, ` `)}${formatNumbers(item.stats.throat)}\n\n\`\`\``);
   ctx.replyWithMarkdown(responseBuffer);
 });
 
@@ -47,7 +51,7 @@ bot.hears(/\/set_profile_by_id (.+)/, (ctx) => {
     let currentSettings = getUserSettings(ctx.update.message.from.id);
     currentSettings.id = id;
     setUserSettings(ctx.update.message.from.id, currentSettings);
-    ctx.replyWithMarkdown(`Done! Profile \*\*\*${defaultSettings[id].name}\*\*\* active.`);
+    ctx.replyWithMarkdown(`Done! Profile \*\*\*${currentSettings.name}\*\*\* active.`);
   } else {
     ctx.reply(`Wrong ID\nMin ID: 0 | Max ID: ${defaultSettings.length-1}\nYou try to set ID: ${id}`);
   }
@@ -68,7 +72,6 @@ bot.hears(/\/voice (.+)/, (ctx) => {
 bot.hears(/\/ping/, (ctx) => ctx.reply(`SAM alive !`));
 bot.hears(/\/echo/, (ctx) => ctx.reply(ctx.match[1]));
 
-defaultSettings = readSettings(defaultSettingsFilename);
 bot.launch();
 // Enable graceful stop
 process.once(`SIGINT`, () => bot.stop(`SIGINT`));
