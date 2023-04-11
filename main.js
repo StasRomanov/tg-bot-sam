@@ -27,7 +27,6 @@ bot.hears(/\/show_current_profile/, (ctx) => {
   saveLogs(ctx);
   const spaceCount = 3;
   const currentProfile = getUserSettings(ctx.update.message.from.id);
-  console.log(currentProfile);
   ctx.replyWithMarkdown(`Current profile: ${defaultSettings[currentProfile.id].name}\n\`\`\`\npitch${``.padEnd(spaceCount, ` `)}speed${``.padEnd(spaceCount, ` `)}mouth${``.padEnd(spaceCount, ` `)}throat\n ${formatNumbers(currentProfile.pitch)}${``.padEnd(5, ` `)}${formatNumbers(currentProfile.speed)}${``.padEnd(5, ` `)}${formatNumbers(currentProfile.mouth)}${``.padEnd(6, ` `)}${formatNumbers(currentProfile.throat)}\n\`\`\`Modern CMU: ${currentProfile.modernCMU? `Enable`: `Disable`} | Sing mode: ${currentProfile.singMode? `Enable`: `Disable`}`);
 });
 
