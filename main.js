@@ -16,7 +16,7 @@ bot.start(async (ctx) => {
 
 bot.help((ctx) => {
   saveLogs(ctx);
-  const helpMsg = `\/voice "text to get audio."`;
+  const helpMsg = `\/voice text to get audio.`;
   ctx.replyWithAudio({source: makeAudio(`text to get audio.`, getUserSettings(ctx.update.message.from.id))});
   ctx.reply(helpMsg);
 });
