@@ -19,8 +19,9 @@ bot.start(async (ctx) => {
 bot.help((ctx) => {
   saveLogs(ctx);
   const helpMsg = `\/voice text to get audio.`;
-  ctx.replyWithAudio({source: makeAudio(`text to get audio.`, getUserSettings(ctx.update.message.from.id))});
   ctx.reply(helpMsg);
+  ctx.replyWithAudio({source: makeAudio(`text to get audio.`, getUserSettings(ctx.update.message.from.id))});
+  ctx.reply(`\/set_profile_by_id ID - to set new profile\n\/show_all_profiles - to look at available profiles\n\/show_faith_profiles - to look profiles as pic`);
 });
 
 bot.hears(/\/show_current_profile/, (ctx) => {
@@ -47,10 +48,10 @@ bot.hears(/\/set_profile_by_id (.+)/, (ctx) => {
   saveLogs(ctx);
   const id = ctx.match[1];
   if (id < defaultSettings.length) {
-    let currentSettings = getUserSettings(ctx.update.message.from.id);
-    currentSettings.id = id;
-    setUserSettings(ctx.update.message.from.id, currentSettings);
-    ctx.replyWithMarkdown(`Done! Profile \*\*\*${currentSettings.name}\*\*\* active.`);
+    let currentProfile = getUserSettings(ctx.update.message.from.id);
+    currentProfile.id = id;
+    setUserSettings(ctx.update.message.from.id, currentProfile);
+    ctx.replyWithMarkdown(`Done! Profile \*\*\*${defaultSettings[currentProfile.id].name}\*\*\* active.`);
   } else {
     ctx.reply(`Wrong ID\nMin ID: 0 | Max ID: ${defaultSettings.length-1}\nYou try to set ID: ${id}`);
   }
