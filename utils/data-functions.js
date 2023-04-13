@@ -46,7 +46,6 @@ const makeAudio = (text, settings) => {
   let audioName = ``;
   const start = Date.now();
   const sam = new SamJs(settings);
-  console.log(text);
   fs.writeFileSync(`./audio/${wavName}`, sam.renderWav(text.trim().replace(/[^\w\s]/gi, ``).replace(/\s+/g, `_`)));
   const end = Date.now();
   if (debugMode) {
