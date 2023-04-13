@@ -61,12 +61,12 @@ bot.hears(/^(\/enable|\/disable|\/toggle)_(modern_cmu|sing_mode)$/, (ctx) => {
   const userSettings = getUserSettings(ctx.update.message.from.id);
   userSettings[ctx.match[2] === `modern_cmu` ? `modernCMU` : `singMode`] = ctx.match[1] === `/toggle` ? !(userSettings[ctx.match[2] === `modern_cmu` ? `modernCMU` : `singMode`]) : ctx.match[1] === `/enable`;
   setUserSettings(ctx.update.message.from.id, userSettings);
-  ctx.reply(`${userSettings.modernCMU} - ${userSettings.singMode}`);
+  ctx.reply(`Modern CMU: ${userSettings.modernCMU} | Sing mode: ${userSettings.singMode}`);
 });
 
 bot.hears(/\/voice (.+)/, (ctx) => {
   saveLogs(ctx);
-  ctx.replyWithAudio({source: makeAudio(ctx.match[1], getUserSettings(ctx.update.message.from.id))});
+  ctx.replyWithAudio({source: makeAudio(ctx.update.message.text.slice(7, ctx.update.message.text.length), getUserSettings(ctx.update.message.from.id))});
 });
 
 bot.hears(/\/ping/, (ctx) => ctx.reply(`SAM alive !`));

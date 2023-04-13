@@ -46,7 +46,8 @@ const makeAudio = (text, settings) => {
   let audioName = ``;
   const start = Date.now();
   const sam = new SamJs(settings);
-  fs.writeFileSync(`./audio/${wavName}`, Buffer.from(sam.renderWav(text.trim().replace(/[^\w\s]/gi, ``).replace(/\s+/g, `_`))));
+  console.log(text);
+  fs.writeFileSync(`./audio/${wavName}`, sam.renderWav(text.trim().replace(/[^\w\s]/gi, ``).replace(/\s+/g, `_`)));
   const end = Date.now();
   if (debugMode) {
     console.log(`Sam-time: ${end - start} ms`);
