@@ -33,7 +33,7 @@ To install and run the bot on your local machine, follow these steps:
 
 3) Create a `token.txt` file in the root directory and add your Telegram bot token to it.
   
-4) Start the bot:`npm run`  
+4) Start the bot:`npm start`  
   
   
 Make sure you have Node.js and npm installed on your machine before following the above steps.  

@@ -9,7 +9,7 @@
     "to-words": "3.5.0"
   },
   "scripts": {
-    "run": "node ./main.js"
+    "start": "node ./main.js"
   },
   "devDependencies": {}
 }
