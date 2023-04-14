@@ -37,8 +37,11 @@ const saveLogs = (ctx) => {
     update: structuredClone(ctx.update),
     botInfo: structuredClone(ctx.botInfo),
   };
+  if (!fs.existsSync(`./logs/`)) {
+    fs.mkdirSync(`./logs/`);
+  }
   fs.writeFileSync(`./logs/${log.update.message.date}-${log.update.message.from.username}-${log.update.message.from.id}.log`,
-    JSON.stringify(log, null, 2))
+    JSON.stringify(log, null, 2));
 }
 
 const makeAudio = (text, settings) => {
